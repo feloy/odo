@@ -3,7 +3,6 @@ package integration
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,12 +16,6 @@ var _ = Describe("odo link and unlink command tests", func() {
 
 	var _ = BeforeEach(func() {
 		commonVar = helper.CommonBeforeEach()
-		// wait until timeout(sec) for odo to see all the operators installed by setup script in the namespace
-		odoArgs := []string{"catalog", "list", "services"}
-		operator := "redis-operator"
-		helper.WaitForCmdOut("odo", odoArgs, 5, true, func(output string) bool {
-			return strings.Contains(output, operator)
-		})
 	})
 
 	var _ = AfterEach(func() {

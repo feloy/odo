@@ -26,7 +26,7 @@ else
 endif
 
 # Slow spec threshold for ginkgo tests. After this time (in second), ginkgo marks test as slow
-SLOW_SPEC_THRESHOLD := 120
+SLOW_SPEC_THRESHOLD := 300
 
 # Env variable GINKGO_TEST_ARGS is used to get control over enabling ginkgo test flags against each test target run.
 # For example:

@@ -1,0 +1,132 @@
+# This workflow will build odo run tests on IBM Kubernetes cluster
+#
+# To configure this workflow:
+#
+# 2. Setup secrets in your repository: IBM_CLOUD_API_KEY and IKS_CLUSTER_ID
+# 3. Change the values for the IBM_CLOUD_REGION and IBM_CLOUD_RESOURCE_GROUP
+
+name: Build and Test on IKS
+
+on:
+  push:
+    paths:
+    - 'cmd/**'
+    - 'pkg/**'
+    - 'go.mod'
+    - 'go.sum'
+    - 'tests/**'
+    - '.github/workflows/tests.yml'
+
+# Environment variables available to all jobs and steps in this workflow
+env:
+  GITHUB_SHA: ${{ github.sha }}
+  IBM_CLOUD_API_KEY: ${{ secrets.IBM_CLOUD_API_KEY }}
+  IBM_CLOUD_REGION: eu-de
+  OPENSHIFT_CLUSTER_ENDPOINT: ${{ secrets.IBM_CLOUD_OPENSHIFT_CLUSTER_ENDPOINT }}
+  KUBE_CLUSTER_ID: ${{ secrets.IBM_CLOUD_KUBE_CLUSTER_ID }}
+
+jobs:
+  integration-tests-openshift:
+    name: Run integration tests on OpenShift
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{matrix.os}}
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install oc
+      uses: redhat-actions/oc-installer@v1
+    
+    - name: Connect to Openshift cluster
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: ${{ env.OPENSHIFT_CLUSTER_ENDPOINT }}
+        openshift_username: apikey
+        openshift_password: ${{ env.IBM_CLOUD_API_KEY }}
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '^1.15.1'
+    
+    - name: Build odo
+      run: make install
+
+    - name: Run Integration tests
+      run: |
+        make test-integration
+
+    - name: Run Devfile Integration tests
+      run: |
+        make test-integration-devfile
+
+    - name: Run Operator Hub Integration tests
+      run: |
+        make test-operator-hub 
+
+    - name: Run Login/logout Integration tests
+      env:
+        SKIP_USER_LOGIN_TESTS: true 
+      run: |
+        make test-cmd-login-logout
+
+    - name: Run Command Integration tests
+      run: |
+        make test-cmd-project
+
+    - name: Run e2e tests
+      run: |
+        make test-e2e-devfile
+
+  integration-tests-kubernetes:
+    name: Run integration tests on Kubernetes
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{matrix.os}}
+    env:
+      KUBERNETES: "true"
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install IBM Cloud CLI
+      run: |
+        curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+        ibmcloud --version
+        ibmcloud config --check-version=false
+        ibmcloud plugin install -f kubernetes-service
+
+    - name: Authenticate with IBM Cloud CLI
+      run: |
+        ibmcloud login --apikey "${IBM_CLOUD_API_KEY}" -r "${IBM_CLOUD_REGION}"
+
+    - name: Connect to Kubernetes cluster
+      run: |
+        ibmcloud ks cluster config --cluster ${KUBE_CLUSTER_ID} --admin
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '^1.15.1'
+    
+    - name: Build odo
+      run: make install
+
+    - name: Run Devfile Integration tests
+      run: |
+        make test-integration-devfile
+
+    - name: Run e2e tests
+      run: |
+        make test-e2e-devfile
+
+    - name: Run projects tests
+      run: |
+        make test-cmd-project
+
+#        make test-operator-hub 
