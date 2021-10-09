@@ -32,7 +32,7 @@ var _ = Describe("odo generic", func() {
 
 		It("Makes sure that we have the long-description when running odo and we dont error", func() {
 			output := helper.Cmd("odo").ShouldPass().Out()
-			Expect(output).To(ContainSubstring("To see a full list of commands, run 'odo --help'"))
+			Expect(output).To(ContainSubstring("To set a full list of commands, run 'odo --help'"))
 		})
 
 		It("Make sure we have the full description when performing odo --help", func() {
