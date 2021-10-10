@@ -22,7 +22,7 @@ TIMEOUT ?= 14400s
 ifdef TEST_EXEC_NODES
    TEST_EXEC_NODES := $(TEST_EXEC_NODES)
 else
-   TEST_EXEC_NODES := 4
+   TEST_EXEC_NODES := 32
 endif
 
 # Slow spec threshold for ginkgo tests. After this time (in second), ginkgo marks test as slow
