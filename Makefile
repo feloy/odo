@@ -22,11 +22,11 @@ TIMEOUT ?= 14400s
 ifdef TEST_EXEC_NODES
    TEST_EXEC_NODES := $(TEST_EXEC_NODES)
 else
-   TEST_EXEC_NODES := 32
+   TEST_EXEC_NODES := 40
 endif
 
 # Slow spec threshold for ginkgo tests. After this time (in second), ginkgo marks test as slow
-SLOW_SPEC_THRESHOLD := 120
+SLOW_SPEC_THRESHOLD := 200
 
 # Env variable GINKGO_TEST_ARGS is used to get control over enabling ginkgo test flags against each test target run.
 # For example:
