@@ -43,11 +43,10 @@ var _ = Describe("odo devfile exec command tests", func() {
 				Expect(err).To(ContainSubstring("unknown flag: --devfile"))
 			})
 
-			// TODO(feloy): Uncomment when https://github.com/openshift/odo/issues/5012 is fixed
-			//	By("exec from a context with no component", func() {
-			//		err := helper.Cmd("odo", "exec", "--context", "/tmp", "--", "touch", "/projects/blah.js").ShouldFail().Err()
-			//		Expect(err).To(ContainSubstring("the current directory does not contain an odo component"))
-			//	})
+			By("exec from a context with no component", func() {
+				err := helper.Cmd("odo", "exec", "--context", "/tmp", "--", "touch", "/projects/blah.js").ShouldFail().Err()
+				Expect(err).To(ContainSubstring("the current directory does not represent an odo component"))
+			})
 		})
 
 		When("odo push is executed", func() {
