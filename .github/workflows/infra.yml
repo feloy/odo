@@ -1,0 +1,130 @@
+# This workflow will deploy and configure clusters necessary to run integration tests
+#
+# To configure this workflow:
+#
+# 2. Setup secrets in your repository: IBM_CLOUD_API_KEY, SSH_PRIVATE_KEY
+# 3. Change the values for the IC_REGION
+
+name: Deploy and Configure tests clusters
+
+on:
+  push:
+    paths:
+    - 'scripts/ansible/**'
+    - '.github/workflows/infra.yml'
+
+env:
+  GITHUB_SHA: ${{ github.sha }}
+  IC_API_KEY: ${{ secrets.IBM_CLOUD_API_KEY }}
+  IC_REGION: eu-de
+
+jobs:
+  deploy-config-openshift-cluster:
+    name: Deploy and Configure OpenShift cluster
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Deploy OpenShift cluster
+      uses: dawidd6/action-ansible-playbook@v2
+      with:
+        directory: scripts/ansible/kubernetes-cluster
+        playbook: create.yml
+        key: ${{secrets.SSH_PRIVATE_KEY}}
+        options: |
+          --extra-vars name_prefix=odo-tests-openshift
+          --extra-vars kube_version=4.7_openshift
+          --extra-vars node_flavor=bx2.4x16
+          --extra-vars workers=3
+          --extra-vars cluster_id_file=/tmp/openshift_id
+          --extra-vars nfs_ip_file=/tmp/nfs_ip
+        requirements: requirements.yml
+
+    - name: Install IBM Cloud CLI
+      run: |
+        curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+        ibmcloud --version
+        ibmcloud config --check-version=false
+        ibmcloud plugin install -f kubernetes-service
+
+    - name: Authenticate with IBM Cloud CLI
+      run: |
+        ibmcloud login --apikey "${IC_API_KEY}" -r "${IC_REGION}"
+
+    - name: Connect to Openshift cluster
+      run: |
+        OPENSHIFT_CLUSTER=$(</tmp/openshift_id)
+        ibmcloud ks cluster config --cluster ${OPENSHIFT_CLUSTER} --admin
+
+    - name: Install python modules
+      shell: bash
+      working-directory: scripts/ansible/kubernetes-cluster
+      run: |
+        pip3 install ansible openshift
+
+    - name: Install Operators on OpenShift cluster
+      uses: dawidd6/action-ansible-playbook@v2
+      with:
+        directory: scripts/ansible/kubernetes-cluster
+        playbook: operators.yml
+        requirements: requirements.yml
+
+    - name: Install NFS provisioner
+      run: |
+        helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/ || true        
+        helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+          --set nfs.server=$(</tmp/nfs_ip) \
+          --set nfs.path=/mnt/nfs \
+          --set storageClass.defaultClass=true \
+          --set storageClass.onDelete=delete || true
+
+  deploy-config-kubernetes-cluster:
+    name: Deploy and Configure Kubernetes cluster
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Deploy Kubernetes cluster
+      uses: dawidd6/action-ansible-playbook@v2
+      with:
+        directory: scripts/ansible/kubernetes-cluster
+        playbook: create.yml
+        key: ${{secrets.SSH_PRIVATE_KEY}}
+        options: |
+          --extra-vars name_prefix=odo-tests-kubernetes
+          --extra-vars kube_version=1.20
+          --extra-vars node_flavor=mx2.4x32
+          --extra-vars workers=2
+          --extra-vars cluster_id_file=/tmp/kubernetes_id
+          --extra-vars nfs_ip_file=/tmp/nfs_ip
+        requirements: requirements.yml
+
+    - name: Install IBM Cloud CLI
+      run: |
+        curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+        ibmcloud --version
+        ibmcloud config --check-version=false
+        ibmcloud plugin install -f kubernetes-service
+
+    - name: Authenticate with IBM Cloud CLI
+      run: |
+        ibmcloud login --apikey "${IC_API_KEY}" -r "${IC_REGION}"
+
+    - name: Connect to Kubernetes cluster
+      run: |
+        KUBERNETES_CLUSTER=$(</tmp/kubernetes_id)
+        ibmcloud ks cluster config --cluster ${KUBERNETES_CLUSTER} --admin
+        kubectl get nodes
+
+    - name: Install NFS provisioner
+      run: |
+        helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/ || true
+        helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+          --set nfs.server=$(</tmp/nfs_ip) \
+          --set nfs.path=/mnt/nfs \
+          --set storageClass.defaultClass=true \
+          --set storageClass.onDelete=delete || true
