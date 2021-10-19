@@ -56,6 +56,7 @@ var _ = Describe("odo link command tests for OperatorHub", func() {
 				componentName = "cmp-" + helper.RandString(6)
 				helper.Cmd("odo", "create", componentName, "--context", commonVar.Context, "--project", commonVar.Project, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-registry.yaml")).ShouldPass()
 				helper.Cmd("odo", "config", "set", "Memory", "300M", "-f", "--context", commonVar.Context).ShouldPass()
+				helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 				serviceName := "service-" + helper.RandString(6)
 				svcFullName = strings.Join([]string{"Redis", serviceName}, "/")
@@ -100,7 +101,7 @@ var _ = Describe("odo link command tests for OperatorHub", func() {
 				})
 
 				It("should not insert the link definition in devfile.yaml when the inlined flag is not used", func() {
-					devfilePath := filepath.Join(commonVar.Context, "devfile.yaml")
+					devfilePath := filepath.Join(commonVar.Context, ".devfile.yaml")
 					content, err := ioutil.ReadFile(devfilePath)
 					Expect(err).To(BeNil())
 					matchInOutput := []string{"inlined", "ServiceBinding"}
@@ -151,7 +152,7 @@ var _ = Describe("odo link command tests for OperatorHub", func() {
 				})
 
 				It("should not insert the link definition in devfile.yaml when the inlined flag is not used", func() {
-					devfilePath := filepath.Join(commonVar.Context, "devfile.yaml")
+					devfilePath := filepath.Join(commonVar.Context, ".devfile.yaml")
 					content, err := ioutil.ReadFile(devfilePath)
 					Expect(err).To(BeNil())
 					matchInOutput := []string{"inlined", "Redis", "redis", "ServiceBinding"}
@@ -189,7 +190,7 @@ var _ = Describe("odo link command tests for OperatorHub", func() {
 				})
 
 				It("should insert service definition in devfile.yaml when the inlined flag is used", func() {
-					devfilePath := filepath.Join(commonVar.Context, "devfile.yaml")
+					devfilePath := filepath.Join(commonVar.Context, ".devfile.yaml")
 					content, err := ioutil.ReadFile(devfilePath)
 					Expect(err).To(BeNil())
 					matchInOutput := []string{"kubernetes", "inlined", "ServiceBinding"}
@@ -226,7 +227,7 @@ var _ = Describe("odo link command tests for OperatorHub", func() {
 				})
 
 				It("should insert service definition in devfile.yaml when the inlined flag is used", func() {
-					devfilePath := filepath.Join(commonVar.Context, "devfile.yaml")
+					devfilePath := filepath.Join(commonVar.Context, ".devfile.yaml")
 					content, err := ioutil.ReadFile(devfilePath)
 					Expect(err).To(BeNil())
 					matchInOutput := []string{"kubernetes", "inlined", "Redis", "redis", "ServiceBinding"}
@@ -262,6 +263,7 @@ var _ = Describe("odo link command tests for OperatorHub", func() {
 				helper.CopyExample(filepath.Join("source", "nodejs"), commonVar.Context)
 				helper.CopyExampleDevFile(filepath.Join("source", "devfiles", "nodejs", "devfile-with-link.yaml"), filepath.Join(commonVar.Context, "devfile.yaml"))
 				helper.Cmd("odo", "create", componentName, "--project", commonVar.Project, "--context", commonVar.Context).ShouldPass()
+				helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 				helper.Cmd("odo", "push", "--context", commonVar.Context).ShouldPass()
 				name := commonVar.CliRunner.GetRunningPodNameByComponent(componentName, commonVar.Project)
@@ -305,6 +307,7 @@ var _ = Describe("odo link command tests for OperatorHub", func() {
 			helper.Cmd("odo", "create", cmp0, "--context", context0, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), context0)
+			helper.Cmd("mv", context0+"/devfile.yaml", context0+"/.devfile.yaml").ShouldPass()
 
 			helper.Cmd("odo", "push", "--context", context0).ShouldPass()
 		})
@@ -336,6 +339,7 @@ var _ = Describe("odo link command tests for OperatorHub", func() {
 				helper.Cmd("odo", "create", cmp1, "--context", context1, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfileNestedCompCommands.yaml")).ShouldPass()
 
 				helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), context1)
+				helper.Cmd("mv", context1+"/devfile.yaml", context1+"/.devfile.yaml").ShouldPass()
 
 				helper.Cmd("odo", "push", "--context", context1).ShouldPass()
 			})

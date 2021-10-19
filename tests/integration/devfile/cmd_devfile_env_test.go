@@ -31,6 +31,7 @@ var _ = Describe("odo devfile env command tests", func() {
 	When("creating a component", func() {
 		BeforeEach(func() {
 			helper.Cmd("odo", "create", "acomponentname", "--project", commonVar.Project, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-registry.yaml")).ShouldPass()
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 		})
 
 		It("Should fail to set and unset an invalid parameter", func() {

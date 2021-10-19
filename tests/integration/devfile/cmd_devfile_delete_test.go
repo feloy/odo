@@ -42,6 +42,7 @@ var _ = Describe("odo devfile delete command tests", func() {
 		BeforeEach(func() {
 			helper.Cmd("odo", "create", componentName, "--project", commonVar.Project, "--app", appName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 		})
 		It("should delete the component", func() {
 			helper.Cmd("odo", "delete", "-f").ShouldPass()
@@ -56,7 +57,7 @@ var _ = Describe("odo devfile delete command tests", func() {
 
 				files := helper.ListFilesInDir(commonVar.Context)
 				Expect(files).To(Not(ContainElement(".odo")))
-				Expect(files).To(Not(ContainElement("devfile.yaml")))
+				Expect(files).To(Not(ContainElement(".devfile.yaml")))
 			})
 
 			Describe("deleting a component from other component directory", func() {
@@ -77,6 +78,7 @@ var _ = Describe("odo devfile delete command tests", func() {
 					BeforeEach(func() {
 						helper.Cmd("odo", "create", secondComp, "--project", commonVar.Project, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-registry.yaml")).ShouldPass()
 						helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+						helper.Cmd("mv", secondDir+"/devfile.yaml", secondDir+"/.devfile.yaml").ShouldPass()
 					})
 					When("the second component is pushed", func() {
 						BeforeEach(func() {
@@ -95,11 +97,11 @@ var _ = Describe("odo devfile delete command tests", func() {
 
 							files := helper.ListFilesInDir(firstDir)
 							Expect(files).To(Not(ContainElement(".odo")))
-							Expect(files).To(Not(ContainElement("devfile.yaml")))
+							Expect(files).To(Not(ContainElement(".devfile.yaml")))
 
 							files = helper.ListFilesInDir(secondDir)
 							Expect(files).To(ContainElement(".odo"))
-							Expect(files).To(ContainElement("devfile.yaml"))
+							Expect(files).To(ContainElement(".devfile.yaml"))
 						})
 						// Marked as pending because it does not work at the moment. It takes the component in current directory into account while deleting.
 						XIt("should delete with the component name", func() {
@@ -227,6 +229,7 @@ var _ = Describe("odo devfile delete command tests", func() {
 		invalidNamespace = "garbage"
 		BeforeEach(func() {
 			helper.Cmd("odo", "create", componentName, "--project", invalidNamespace, "--app", appName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-registry.yaml")).ShouldPass()
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 		})
 		It("should let the user delete the local config files with -a flag", func() {
 			// DeleteLocalConfig appends -a flag
@@ -252,24 +255,26 @@ var _ = Describe("odo devfile delete command tests", func() {
 			devfilePath = filepath.Join(newContext, devfile)
 			helper.CopyExampleDevFile(filepath.Join("source", "devfiles", "nodejs", devfile), devfilePath)
 			helper.Cmd("odo", "create", "nodejs", "--devfile", devfilePath).ShouldPass()
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 		})
 		It("should successfully delete devfile", func() {
 			// devfile was copied to top level
-			Expect(helper.VerifyFileExists(path.Join(commonVar.Context, devfile))).To(BeTrue())
+			Expect(helper.VerifyFileExists(path.Join(commonVar.Context, ".devfile.yaml"))).To(BeTrue())
 			helper.Cmd("odo", "delete", "--all", "-f").ShouldPass()
-			Expect(helper.VerifyFileExists(path.Join(commonVar.Context, devfile))).To(BeFalse())
+			Expect(helper.VerifyFileExists(path.Join(commonVar.Context, ".devfile.yaml"))).To(BeFalse())
 		})
 	})
 	When("component is created from an existing devfile present in its directory", func() {
 		BeforeEach(func() {
 			helper.CopyExampleDevFile(filepath.Join("source", "devfiles", "nodejs", devfile), path.Join(commonVar.Context, devfile))
 			helper.Cmd("odo", "create", "nodejs").ShouldPass()
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 		})
 		It("should not delete the devfile", func() {
 			// devfile was copied to top level
-			Expect(helper.VerifyFileExists(path.Join(commonVar.Context, devfile))).To(BeTrue())
+			Expect(helper.VerifyFileExists(path.Join(commonVar.Context, ".devfile.yaml"))).To(BeTrue())
 			helper.Cmd("odo", "delete", "--all", "-f").ShouldPass()
-			Expect(helper.VerifyFileExists(path.Join(commonVar.Context, devfile))).To(BeTrue())
+			Expect(helper.VerifyFileExists(path.Join(commonVar.Context, ".devfile.yaml"))).To(BeTrue())
 		})
 	})
 })

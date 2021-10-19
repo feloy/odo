@@ -64,6 +64,7 @@ var _ = Describe("odo link and unlink command tests", func() {
 		var createAndPush = func(compType string, compName string, contextDir string) {
 			helper.CopyExample(filepath.Join("source", compType), contextDir)
 			helper.Cmd("odo", "create", compName, "--context", contextDir, "--project", commonVar.Project, "--devfile", helper.GetExamplePath("source", "devfiles", compType, "devfile-registry.yaml")).ShouldPass()
+			helper.Cmd("mv", contextDir+"/devfile.yaml", contextDir+"/.devfile.yaml").ShouldPass()
 			helper.Cmd("odo", "url", "create", "--port", "8080", "--context", contextDir).ShouldPass()
 			helper.Cmd("odo", "push", "--context", contextDir).ShouldPass()
 		}

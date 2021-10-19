@@ -106,6 +106,7 @@ var _ = Describe("odo service command tests for OperatorHub", func() {
 					helper.CopyExample(filepath.Join("source", "nodejs"), commonVar.Context)
 					helper.Cmd("odo", "create", cmpName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-registry.yaml")).ShouldPass()
 					helper.Cmd("odo", "config", "set", "Memory", "300M", "-f").ShouldPass()
+					helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 				})
 
 				It("should fail for interactive mode", func() {
@@ -257,7 +258,7 @@ var _ = Describe("odo service command tests for OperatorHub", func() {
 					})
 
 					It("should insert service definition in devfile.yaml when the inlined flag is used", func() {
-						devfilePath := filepath.Join(commonVar.Context, "devfile.yaml")
+						devfilePath := filepath.Join(commonVar.Context, ".devfile.yaml")
 						content, err := ioutil.ReadFile(devfilePath)
 						Expect(err).To(BeNil())
 						matchInOutput := []string{"kubernetes", "inlined", "Redis", "redis"}
@@ -328,7 +329,7 @@ var _ = Describe("odo service command tests for OperatorHub", func() {
 
 							It("should delete service definition from devfile.yaml", func() {
 								// read the devfile.yaml to check if service definition was deleted
-								devfilePath := filepath.Join(commonVar.Context, "devfile.yaml")
+								devfilePath := filepath.Join(commonVar.Context, ".devfile.yaml")
 								content, err := ioutil.ReadFile(devfilePath)
 								Expect(err).To(BeNil())
 								matchInOutput := []string{"kubernetes", "inlined", "Redis", "redis"}
@@ -394,7 +395,7 @@ var _ = Describe("odo service command tests for OperatorHub", func() {
 					})
 
 					It("should not insert service definition in devfile.yaml when the inlined flag is not used", func() {
-						devfilePath := filepath.Join(commonVar.Context, "devfile.yaml")
+						devfilePath := filepath.Join(commonVar.Context, ".devfile.yaml")
 						content, err := ioutil.ReadFile(devfilePath)
 						Expect(err).To(BeNil())
 						matchInOutput := []string{"redis", "Redis", "inlined"}

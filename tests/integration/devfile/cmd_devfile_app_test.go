@@ -100,6 +100,7 @@ var _ = Describe("odo devfile app command tests", func() {
 
 				helper.Cmd("odo", "create", "--project", namespace, component00, "--context", context00, "--app", app0, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfileNestedCompCommands.yaml")).ShouldPass()
 				helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), context00)
+				helper.Cmd("mv", context00+"/devfile.yaml", context00+"/.devfile.yaml").ShouldPass()
 				helper.Cmd("odo", "storage", "create", storage00, "--path", "/data", "--size", "1Gi", "--context", context00).ShouldPass()
 				helper.Cmd("odo", "url", "create", url00, "--port", "3000", "--context", context00, "--host", "com", "--ingress").ShouldPass()
 				helper.Cmd("odo", "push", "--context", context00).ShouldPass()
@@ -170,6 +171,7 @@ var _ = Describe("odo devfile app command tests", func() {
 func createComponent(componentName, appName, project, context string) {
 	helper.Cmd("odo", "create", "--project", project, componentName, "--context", context, "--app", appName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 	helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), context)
+	helper.Cmd("mv", context+"/devfile.yaml", context+"/.devfile.yaml").ShouldPass()
 	helper.Cmd("odo", "push", "--context", context).ShouldPass()
 }
 

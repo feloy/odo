@@ -32,6 +32,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", "create", cmpName, "--context", commonVar.Context, "--project", commonVar.Project, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			storageNames := []string{helper.RandString(5), helper.RandString(5)}
 			pathNames := []string{"/data", "/" + storageNames[1]}
@@ -73,6 +74,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "springboot", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			storageName := helper.RandString(5)
 			pathName := "/data1"
@@ -128,6 +130,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			storageName := helper.RandString(5)
 
@@ -146,6 +149,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			helper.Cmd("odo", "storage", "create", "--path", "/data", "--context", commonVar.Context).ShouldPass()
 
@@ -162,6 +166,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			actualJSONStorage := helper.Cmd("odo", "storage", "create", "mystorage", "--path=/opt/app-root/src/storage/", "--size=1Gi", "--context", commonVar.Context, "-o", "json").ShouldPass().Out()
 			values := gjson.GetMany(actualJSONStorage, "kind", "metadata.name", "spec.size", "spec.path")
@@ -181,6 +186,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			storageNames := []string{helper.RandString(5), helper.RandString(5)}
 			pathNames := []string{"/data", "/data-1"}
@@ -228,6 +234,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			stdOut := helper.Cmd("odo", "storage", "list", "--context", commonVar.Context).ShouldPass().Out()
 			helper.MatchAllInOutput(stdOut, []string{"firstvol", "secondvol", "/secondvol", "/data", "/data2", "Not Pushed", "CONTAINER", "runtime", "runtime2"})
@@ -248,6 +255,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			helper.Cmd("odo", "storage", "create", "mystorage", "--path=/opt/app-root/src/storage/", "--size=1Gi", "--context", commonVar.Context).ShouldPass()
 
@@ -264,6 +272,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			storageName := helper.RandString(5)
 			pathNames := []string{"/data", "/data-1"}
@@ -278,6 +287,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			storageNames := []string{helper.RandString(5), helper.RandString(5)}
 			pathName := "/data"
@@ -292,6 +302,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			helper.Cmd("odo", "storage", "delete", helper.RandString(5), "--context", commonVar.Context, "-f").ShouldFail()
 		})
@@ -306,6 +317,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			helper.Cmd("odo", "push", "--context", commonVar.Context).ShouldPass()
 
@@ -336,6 +348,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			helper.Cmd("odo", "push", "--context", commonVar.Context).ShouldPass()
 
@@ -371,6 +384,7 @@ var _ = Describe("odo devfile storage command tests", func() {
 			helper.Cmd("odo", args...).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			helper.Cmd("odo", "push", "--context", commonVar.Context).ShouldPass()
 

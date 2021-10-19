@@ -30,7 +30,7 @@ var _ = Describe("odo devfile exec command tests", func() {
 		BeforeEach(func() {
 			helper.Cmd("odo", "create", cmpName, "--context", commonVar.Context, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
-
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 		})
 
 		It("should error out", func() {

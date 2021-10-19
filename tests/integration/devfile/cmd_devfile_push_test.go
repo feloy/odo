@@ -37,6 +37,7 @@ var _ = Describe("odo devfile push command tests", func() {
 		BeforeEach(func() {
 			helper.Cmd("odo", "create", "--project", commonVar.Project, cmpName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-registry.yaml")).ShouldPass()
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 		})
 		When("setting git config and running odo push", func() {
 			remoteURL := "https://github.com/odo-devfiles/nodejs-ex"
@@ -66,7 +67,7 @@ var _ = Describe("odo devfile push command tests", func() {
 
 			When("updating a variable into devfile", func() {
 				BeforeEach(func() {
-					helper.ReplaceString("devfile.yaml", "name: FOO", "name: BAR")
+					helper.ReplaceString(".devfile.yaml", "name: FOO", "name: BAR")
 				})
 
 				It("should run odo push successfully", func() {
@@ -90,7 +91,7 @@ var _ = Describe("odo devfile push command tests", func() {
 			When("update devfile and push again", func() {
 
 				BeforeEach(func() {
-					helper.ReplaceString("devfile.yaml", "name: FOO", "name: BAR")
+					helper.ReplaceString(".devfile.yaml", "name: FOO", "name: BAR")
 					output = helper.Cmd("odo", "push", "-o", "json", "--project", commonVar.Project).ShouldPass().Out()
 				})
 
@@ -402,7 +403,7 @@ var _ = Describe("odo devfile push command tests", func() {
 
 		When("doing odo push with devfile containing volume-component", func() {
 			BeforeEach(func() {
-				helper.RenameFile("devfile.yaml", "devfile-old.yaml")
+				helper.RenameFile(".devfile.yaml", "devfile-old.yaml")
 				helper.CopyExampleDevFile(filepath.Join("source", "devfiles", "nodejs", "devfile-with-volume-components.yaml"), filepath.Join(commonVar.Context, "devfile.yaml"))
 
 				output = helper.Cmd("odo", "push", "--project", commonVar.Project).ShouldPass().Out()
@@ -801,6 +802,7 @@ var _ = Describe("odo devfile push command tests", func() {
 		BeforeEach(func() {
 			helper.Cmd("odo", "create", "--project", commonVar.Project, cmpName, "--devfile", helper.GetExamplePath("source", "devfiles", "springboot", "devfile.yaml")).ShouldPass()
 			helper.CopyExample(filepath.Join("source", "devfiles", "springboot", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 			output = helper.Cmd("odo", "push", "--project", commonVar.Project).ShouldPass().Out()
 		})
 		It("should execute default build and run commands correctly", func() {
@@ -840,6 +842,7 @@ var _ = Describe("odo devfile push command tests", func() {
 				BeforeEach(func() {
 					helper.Cmd("odo", "create", "--project", commonVar.Project, cmpName, "--devfile", helper.GetExamplePath("source", "devfiles", "springboot", "devfile-registry.yaml")).ShouldPass()
 					helper.CopyExample(filepath.Join("source", "devfiles", "springboot", "project"), commonVar.Context)
+					helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 					fmt.Fprintf(GinkgoWriter, "Testing with force push %v", shouldForcePush)
 					output = helper.Cmd("odo", "push", "--project", commonVar.Project).ShouldPass().Out()
@@ -852,7 +855,7 @@ var _ = Describe("odo devfile push command tests", func() {
 				When("Update the devfile.yaml, do odo push", func() {
 
 					BeforeEach(func() {
-						helper.ReplaceString("devfile.yaml", "memoryLimit: 768Mi", "memoryLimit: 769Mi")
+						helper.ReplaceString(".devfile.yaml", "memoryLimit: 768Mi", "memoryLimit: 769Mi")
 						commands := []string{"push", "-v", "4", "--project", commonVar.Project}
 						if shouldForcePush {
 							commands = append(commands, "-f")
@@ -932,6 +935,7 @@ var _ = Describe("odo devfile push command tests", func() {
 			helper.Cmd("odo", "create", cmpName, "--context", commonVar.Context, "--project", commonVar.Project, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-with-remote-attributes.yaml")).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			// create a folder and file which shouldn't be pushed
 			helper.MakeDir(filepath.Join(commonVar.Context, "views"))
@@ -945,7 +949,7 @@ var _ = Describe("odo devfile push command tests", func() {
 			podName := commonVar.CliRunner.GetRunningPodNameByComponent(cmpName, commonVar.Project)
 			stdOut := commonVar.CliRunner.ExecListDir(podName, commonVar.Project, sourcePath)
 			helper.MatchAllInOutput(stdOut, []string{"package.json", "server"})
-			helper.DontMatchAllInOutput(stdOut, []string{"test", "views", "devfile.yaml"})
+			helper.DontMatchAllInOutput(stdOut, []string{"test", "views", ".devfile.yaml"})
 
 			stdOut = commonVar.CliRunner.ExecListDir(podName, commonVar.Project, sourcePath+"/server")
 			helper.MatchAllInOutput(stdOut, []string{"server.js", "test"})
@@ -968,6 +972,7 @@ var _ = Describe("odo devfile push command tests", func() {
 				helper.Cmd("odo", "create", "--project", "default", componentName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 
 				helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+				helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 				stdout := helper.Cmd("odo", "push").ShouldFail().Err()
 				helper.MatchAllInOutput(stdout, []string{"odo may not work as expected in the default project, please run the odo component in a non-default project"})
@@ -989,6 +994,7 @@ var _ = Describe("odo devfile push command tests", func() {
 				helper.Cmd("odo", "create", "--project", "default", componentName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 
 				helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+				helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 				stdout := helper.Cmd("odo", "push").ShouldPass().Out()
 				helper.DontMatchAllInOutput(stdout, []string{"odo may not work as expected in the default project"})

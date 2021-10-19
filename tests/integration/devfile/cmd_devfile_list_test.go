@@ -34,6 +34,7 @@ var _ = Describe("odo list with devfile", func() {
 		BeforeEach(func() {
 			helper.Cmd("odo", "create", "--project", commonVar.Project, cmpName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 		})
 
@@ -64,6 +65,7 @@ var _ = Describe("odo list with devfile", func() {
 
 				helper.Cmd("odo", "create", "--project", commonVar.Project, "--app", appName, "--context", context2, cmpName2, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 				helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), context2)
+				helper.Cmd("mv", context2+"/devfile.yaml", context2+"/.devfile.yaml").ShouldPass()
 			})
 
 			AfterEach(func() {

@@ -129,6 +129,7 @@ var _ = Describe("odo preference and config command tests", func() {
 		BeforeEach(func() {
 			helper.CopyExample(filepath.Join("source", "nodejs"), commonVar.Context)
 			helper.Cmd("odo", "create", "nodejs", "--project", commonVar.Project, "--context", commonVar.Context, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-registry.yaml")).ShouldPass()
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 			ocRunner = helper.NewOcRunner("oc")
 			token = ocRunner.GetToken()
 			ocRunner.Logout()

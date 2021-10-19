@@ -38,6 +38,7 @@ var _ = Describe("odo devfile describe command tests", func() {
 			// With nodejs, both projectType and language is nodejs, but with python-django, django is the projectType and python is the language
 			helper.CopyExample(filepath.Join("source", "python"), commonVar.Context)
 			helper.Cmd("odo", "create", "python-django", compName, "--project", commonVar.Project, "--context", commonVar.Context, "--app", "testing").ShouldPass()
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 			helper.Cmd("odo", "url", "create", "url-1", "--port", "3000", "--host", "example.com", "--context", commonVar.Context).ShouldPass()
 			helper.Cmd("odo", "url", "create", "url-2", "--port", "4000", "--host", "example.com", "--context", commonVar.Context).ShouldPass()
 			helper.Cmd("odo", "storage", "create", "storage-1", "--size", "1Gi", "--path", "/data1", "--context", commonVar.Context).ShouldPass()

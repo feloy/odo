@@ -45,6 +45,7 @@ var _ = Describe("odo devfile status command tests", func() {
 			helper.Cmd("odo", "create", "--project", namespace, cmpName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			helper.Cmd("odo", "push", "-o", "json", "--project", namespace).ShouldPass()
 
@@ -131,6 +132,7 @@ var _ = Describe("odo devfile status command tests", func() {
 			helper.Cmd("odo", "create", "--project", namespace, cmpName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 
 			helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 			helper.Cmd("odo", "push", "-o", "json", "--project", namespace).ShouldPass()
 
@@ -314,6 +316,7 @@ var _ = Describe("odo devfile status command tests", func() {
 				helper.Cmd("odo", "create", "--project", namespace, cmpName, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile.yaml")).ShouldPass()
 
 				helper.CopyExample(filepath.Join("source", "devfiles", "nodejs", "project"), context)
+				helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 
 				urlParams := []string{"url", "create", "my-url", "--port", "3000"}
 				// if secure {

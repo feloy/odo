@@ -29,6 +29,7 @@ var _ = Describe("odo devfile config command tests", func() {
 	When("a component is created", func() {
 		BeforeEach(func() {
 			helper.Cmd("odo", "create", "nodejs", "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-registry.yaml")).ShouldPass()
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 		})
 
 		When("executing config view", func() {

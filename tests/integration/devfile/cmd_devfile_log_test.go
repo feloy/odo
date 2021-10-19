@@ -30,6 +30,7 @@ var _ = Describe("odo devfile log command tests", func() {
 
 			helper.Cmd("odo", "create", "--project", commonVar.Project, cmpName, "--context", commonVar.Context, "--devfile", helper.GetExamplePath("source", "devfiles", "springboot", "devfile.yaml")).ShouldPass()
 			helper.CopyExample(filepath.Join("source", "devfiles", "springboot", "project"), commonVar.Context)
+			helper.Cmd("mv", commonVar.Context+"/devfile.yaml", commonVar.Context+"/.devfile.yaml").ShouldPass()
 			helper.Cmd("odo", "push", "--context", commonVar.Context).ShouldPass()
 			output := helper.Cmd("odo", "log", "--context", commonVar.Context).ShouldPass().Out()
 			Expect(output).To(ContainSubstring("ODO_COMMAND_RUN"))
@@ -55,6 +56,7 @@ var _ = Describe("odo devfile log command tests", func() {
 			projectDir := filepath.Join(commonVar.Context, "projectDir")
 			helper.CopyExample(filepath.Join("source", "web-nodejs-sample"), projectDir)
 			helper.Cmd("odo", "create", "--project", commonVar.Project, cmpName, "--context", projectDir, "--devfile", helper.GetExamplePath("source", "devfiles", "nodejs", "devfile-with-debugrun.yaml")).ShouldPass()
+			helper.Cmd("mv", projectDir+"/devfile.yaml", projectDir+"/.devfile.yaml").ShouldPass()
 			helper.Cmd("odo", "push", "--debug", "--context", projectDir).ShouldPass()
 
 			output := helper.Cmd("odo", "log", "--debug", "--context", projectDir).ShouldPass().Out()
