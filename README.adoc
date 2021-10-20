@@ -148,3 +148,5 @@ You can find the exact dates of all scheduled odo calls together with sprint dat
 
 To participate in the calls, please join link:https://groups.google.com/forum/#!forum/odo-dev[odo-dev Google group]. When you join the group, you will automatically get invites to all odo related calls and get permissions to all necessary documents.
 
+ 
+ 
