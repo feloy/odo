@@ -304,3 +304,6 @@ test-operator-hub: ## Run OperatorHub tests
 .PHONY: test-cmd-devfile-describe
 test-cmd-devfile-describe:
 	$(RUN_GINKGO) $(GINKGO_FLAGS) -focus="odo devfile describe command tests" tests/integration/devfile/
+
+godoc:
+	scripts/generate_go_documentation.sh
