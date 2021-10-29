@@ -341,7 +341,7 @@ func (co *CreateOptions) Complete(name string, cmd *cobra.Command, args []string
 			}
 		}
 
-		componentNamespace = co.Context.Project
+		componentNamespace = co.Context.GetProject()
 	}
 
 	// set devfileName to same value as componentType for telemetry
