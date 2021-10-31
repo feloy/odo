@@ -157,18 +157,12 @@ func (co *CreateOptions) Complete(name string, cmd *cobra.Command, args []string
 
 	if co.now {
 		// this populates the EnvInfo as well
-		co.Context, err = genericclioptions.New(genericclioptions.CreateParameters{
-			Cmd:               cmd,
-			CreateAppIfNeeded: true,
-		})
+		co.Context, err = genericclioptions.New(genericclioptions.NewCreateParameters(cmd).CreateAppIfNeeded())
 		if err != nil {
 			return err
 		}
 	} else {
-		co.Context, err = genericclioptions.New(genericclioptions.CreateParameters{
-			Cmd:     cmd,
-			Offline: true,
-		})
+		co.Context, err = genericclioptions.New(genericclioptions.NewCreateParameters(cmd).IsOffline())
 		if err != nil {
 			return err
 		}
