@@ -31,7 +31,7 @@ var _ = Describe("odo devfile build-images command tests", func() {
 			helper.Cmd("odo", "create").ShouldPass()
 
 		})
-		It("should run odo build-images with push", func() {
+		It("should run odo build-images", func() {
 			stdout := helper.Cmd("odo", "build-images").ShouldPass().Out()
 			Expect(stdout).To(ContainSubstring("Successfully tagged quay.io/unknown-account/myimage:latest"))
 		})
