@@ -3,6 +3,13 @@ package describe
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"regexp"
+	"sort"
+	"strings"
+	"text/tabwriter"
+
 	"github.com/go-openapi/spec"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/openshift/odo/pkg/machineoutput"
@@ -10,13 +17,7 @@ import (
 	olm "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
-	"io"
 	"k8s.io/klog"
-	"os"
-	"regexp"
-	"sort"
-	"strings"
-	"text/tabwriter"
 )
 
 type operatorBackend struct {
@@ -42,7 +43,7 @@ func (ohb *operatorBackend) CompleteDescribeService(dso *DescribeServiceOptions,
 		CR = ""
 	}
 	// we check if the cluster supports ClusterServiceVersion or not.
-	isCSVSupported, err := service.IsCSVSupported()
+	isCSVSupported, err := dso.Client.GetKubeClient().IsCSVSupported()
 	if err != nil {
 		// if there is an error checking it, we return the error.
 		return err

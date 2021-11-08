@@ -57,8 +57,6 @@ func (o *commonLinkOptions) getLinkType() string {
 
 // Complete completes LinkOptions after they've been created
 func (o *commonLinkOptions) complete(name string, cmd *cobra.Command, args []string, context string) (err error) {
-	o.csvSupport, _ = svc.IsCSVSupported()
-
 	o.operationName = name
 
 	suppliedName := args[0]
@@ -88,6 +86,8 @@ func (o *commonLinkOptions) complete(name string, cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
+
+	o.csvSupport, _ = o.Client.GetKubeClient().IsCSVSupported()
 
 	if o.Context.EnvSpecificInfo == nil {
 		return fmt.Errorf("failed to find environment info")
