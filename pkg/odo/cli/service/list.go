@@ -5,7 +5,6 @@ import (
 
 	"github.com/openshift/odo/pkg/devfile/location"
 	"github.com/openshift/odo/pkg/odo/genericclioptions"
-	svc "github.com/openshift/odo/pkg/service"
 	"github.com/spf13/cobra"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
@@ -37,26 +36,26 @@ func NewServiceListOptions() *ServiceListOptions {
 
 // Complete completes ServiceListOptions after they've been created
 func (o *ServiceListOptions) Complete(name string, cmd *cobra.Command, args []string) (err error) {
-	if o.csvSupport, err = svc.IsCSVSupported(); err != nil {
-		return err
-	} else if o.csvSupport {
-		o.Context, err = genericclioptions.New(genericclioptions.CreateParameters{
-			Cmd:              cmd,
-			DevfilePath:      location.DevfileFilenamesProvider(o.componentContext),
-			ComponentContext: o.componentContext,
-		})
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("failed to list Operator backed services, make sure you have installed the Operators on the cluster")
-	}
+
 	o.Context, err = genericclioptions.New(genericclioptions.CreateParameters{
 		Cmd:              cmd,
 		DevfilePath:      location.DevfileFilenamesProvider(o.componentContext),
 		ComponentContext: o.componentContext,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	o.csvSupport, err = o.Client.GetKubeClient().IsCSVSupported()
+	if err != nil {
+		return err
+	}
+
+	if !o.csvSupport {
+		return fmt.Errorf("failed to list Operator backed services, make sure you have installed the Operators on the cluster")
+	}
+
+	return nil
 }
 
 // Validate validates the ServiceListOptions based on completed values
