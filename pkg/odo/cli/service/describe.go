@@ -5,8 +5,8 @@ import (
 
 	"github.com/openshift/odo/pkg/devfile/location"
 	"github.com/openshift/odo/pkg/odo/genericclioptions"
-	"github.com/openshift/odo/pkg/service"
-	svc "github.com/openshift/odo/pkg/service"
+	"github.com/openshift/odo/pkg/service/utils"
+
 	"github.com/spf13/cobra"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
@@ -53,7 +53,7 @@ func (o *DescribeOptions) Complete(name string, cmd *cobra.Command, args []strin
 	}
 
 	o.serviceName = args[0]
-	_, _, err = service.SplitServiceKindName(o.serviceName)
+	_, _, err = utils.SplitServiceKindName(o.serviceName)
 	if err != nil {
 		return fmt.Errorf("invalid service name")
 	}
@@ -69,7 +69,7 @@ func (o *DescribeOptions) Validate() error {
 		return err
 	}
 
-	svcDeployed, err := svc.OperatorSvcExists(o.KClient, o.serviceName)
+	svcDeployed, err := o.KClient.OperatorSvcExists(o.serviceName)
 	if err != nil {
 		return err
 	}

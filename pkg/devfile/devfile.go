@@ -2,13 +2,17 @@ package devfile
 
 import (
 	"fmt"
+	"net/url"
+	"path/filepath"
 
 	"strings"
 
 	"github.com/devfile/library/pkg/devfile"
 	"github.com/devfile/library/pkg/devfile/parser"
+	devfilefs "github.com/devfile/library/pkg/testingutil/filesystem"
 	"github.com/openshift/odo/pkg/devfile/validate"
 	"github.com/openshift/odo/pkg/log"
+	"github.com/openshift/odo/pkg/util"
 )
 
 func parseDevfile(args parser.ParserArgs) (parser.DevfileObj, error) {
@@ -66,4 +70,30 @@ func variableWarning(section string, variable string, messages []string) string 
 	}
 	return fmt.Sprintf("Invalid variable(s) %s in %q section with name %q. ", strings.Join(quotedVars, ","), section, variable)
 
+}
+
+// GetDataFromURI gets the data from the given URI
+// if the uri is a local path, we use the componentContext to complete the local path
+func GetDataFromURI(uri, componentContext string, fs devfilefs.Filesystem) (string, error) {
+
+	parsedURL, err := url.Parse(uri)
+	if err != nil {
+		return "", err
+	}
+	if len(parsedURL.Host) != 0 && len(parsedURL.Scheme) != 0 {
+		params := util.HTTPRequestParams{
+			URL: uri,
+		}
+		dataBytes, err := util.DownloadFileInMemoryWithCache(params, 1)
+		if err != nil {
+			return "", err
+		}
+		return string(dataBytes), nil
+	} else {
+		dataBytes, err := fs.ReadFile(filepath.Join(componentContext, uri))
+		if err != nil {
+			return "", err
+		}
+		return string(dataBytes), nil
+	}
 }

@@ -13,15 +13,18 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/ghodss/yaml"
-	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/validate"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/openshift/odo/pkg/machineoutput"
 	"github.com/openshift/odo/pkg/odo/genericclioptions"
 	svc "github.com/openshift/odo/pkg/service"
+	"github.com/openshift/odo/pkg/service/utils"
+
+	"github.com/ghodss/yaml"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/validate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -48,7 +51,7 @@ func (b *OperatorBackend) CompleteServiceCreate(o *CreateOptions, cmd *cobra.Com
 	}
 
 	// split the name provided on CLI and populate servicetype & customresource
-	o.ServiceType, b.CustomResource, err = svc.SplitServiceKindName(args[0])
+	o.ServiceType, b.CustomResource, err = utils.SplitServiceKindName(args[0])
 	if err != nil {
 		return fmt.Errorf("invalid service name, use the format <operator-type>/<crd-name>")
 	}
@@ -92,7 +95,7 @@ func (b *OperatorBackend) ValidateServiceCreate(o *CreateOptions) error {
 		if o.ServiceName != "" && !o.DryRun {
 			// First check if service with provided name already exists
 			svcFullName := strings.Join([]string{b.kind, o.ServiceName}, "/")
-			exists, e := svc.OperatorSvcExists(o.KClient, svcFullName)
+			exists, e := o.KClient.OperatorSvcExists(svcFullName)
 			if e != nil {
 				return e
 			}
@@ -178,7 +181,7 @@ func (b *OperatorBackend) ValidateServiceCreate(o *CreateOptions) error {
 		if o.ServiceName != "" && !o.DryRun {
 			// First check if service with provided name already exists
 			svcFullName := strings.Join([]string{b.CustomResource, o.ServiceName}, "/")
-			exists, e := svc.OperatorSvcExists(o.KClient, svcFullName)
+			exists, e := o.KClient.OperatorSvcExists(svcFullName)
 			if e != nil {
 				return e
 			}
@@ -278,7 +281,7 @@ func (b *OperatorBackend) RunServiceCreate(o *CreateOptions) (err error) {
 
 // ServiceDefined returns true if the service is defined in the devfile
 func (b *OperatorBackend) ServiceDefined(ctx *genericclioptions.Context, name string) (bool, error) {
-	_, instanceName, err := svc.SplitServiceKindName(name)
+	_, instanceName, err := utils.SplitServiceKindName(name)
 	if err != nil {
 		return false, err
 	}
@@ -287,7 +290,7 @@ func (b *OperatorBackend) ServiceDefined(ctx *genericclioptions.Context, name st
 
 func (b *OperatorBackend) DeleteService(o *DeleteOptions, name string, application string) error {
 	// "name" is of the form CR-Name/Instance-Name so we split it
-	_, instanceName, err := svc.SplitServiceKindName(name)
+	_, instanceName, err := utils.SplitServiceKindName(name)
 	if err != nil {
 		return err
 	}
@@ -302,7 +305,7 @@ func (b *OperatorBackend) DeleteService(o *DeleteOptions, name string, applicati
 
 func (b *OperatorBackend) DescribeService(o *DescribeOptions, serviceName, app string) error {
 
-	clusterList, _, err := svc.ListOperatorServices(o.KClient)
+	clusterList, _, err := o.KClient.ListOperatorServices()
 	if err != nil {
 		return err
 	}
@@ -315,7 +318,7 @@ func (b *OperatorBackend) DescribeService(o *DescribeOptions, serviceName, app s
 		}
 	}
 
-	devfileList, err := svc.ListDevfileServices(o.KClient, o.EnvSpecificInfo.GetDevfileObj(), o.componentContext)
+	devfileList, err := o.KClient.ListDevfileServices(o.EnvSpecificInfo.GetDevfileObj(), o.componentContext)
 	if err != nil {
 		return err
 	}

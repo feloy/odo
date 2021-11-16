@@ -8,32 +8,32 @@ import (
 	"strings"
 	"time"
 
-	"github.com/devfile/library/pkg/devfile/generator"
-	componentlabels "github.com/openshift/odo/pkg/component/labels"
-	"github.com/openshift/odo/pkg/envinfo"
-	"github.com/openshift/odo/pkg/service"
-	"github.com/openshift/odo/pkg/util"
-
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/pkg/errors"
-	"k8s.io/klog"
-
-	devfilev1 "github.com/devfile/api/v2/pkg/apis/workspaces/v1alpha2"
-	parsercommon "github.com/devfile/library/pkg/devfile/parser/data/v2/common"
 	"github.com/openshift/odo/pkg/component"
+	componentlabels "github.com/openshift/odo/pkg/component/labels"
 	"github.com/openshift/odo/pkg/devfile/adapters/common"
 	"github.com/openshift/odo/pkg/devfile/adapters/kubernetes/storage"
 	"github.com/openshift/odo/pkg/devfile/adapters/kubernetes/utils"
+	"github.com/openshift/odo/pkg/envinfo"
 	"github.com/openshift/odo/pkg/kclient"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/openshift/odo/pkg/occlient"
+	"github.com/openshift/odo/pkg/service"
 	storagepkg "github.com/openshift/odo/pkg/storage"
 	storagelabels "github.com/openshift/odo/pkg/storage/labels"
 	"github.com/openshift/odo/pkg/sync"
+	"github.com/openshift/odo/pkg/util"
+
+	devfilev1 "github.com/devfile/api/v2/pkg/apis/workspaces/v1alpha2"
+	"github.com/devfile/library/pkg/devfile/generator"
+	parsercommon "github.com/devfile/library/pkg/devfile/parser/data/v2/common"
+
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog"
+
+	"github.com/pkg/errors"
 )
 
 const supervisorDStatusWaitTimeInterval = 1
@@ -186,13 +186,13 @@ func (a Adapter) Push(parameters common.PushParameters) (err error) {
 	log.Infof("\nCreating Services for component %s", a.ComponentName)
 
 	// validate if the GVRs represented by Kubernetes inlined components are supported by the underlying cluster
-	err = service.ValidateResourcesExist(a.Client.GetKubeClient(), k8sComponents, a.Context)
+	err = a.Client.GetKubeClient().ValidateResourcesExist(k8sComponents, a.Context)
 	if err != nil {
 		return err
 	}
 
 	// create the Kubernetes objects from the manifest and delete the ones not in the devfile
-	err = service.PushKubernetesResources(a.Client.GetKubeClient(), k8sComponents, labels, a.Context)
+	err = a.Client.GetKubeClient().PushKubernetesResources(k8sComponents, labels, a.Context)
 	if err != nil {
 		return errors.Wrap(err, "failed to create service(s) associated with the component")
 	}
@@ -233,7 +233,7 @@ func (a Adapter) Push(parameters common.PushParameters) (err error) {
 		}
 	}
 
-	err = service.UpdateServicesWithOwnerReferences(a.Client.GetKubeClient(), k8sComponents, ownerReference, a.Context)
+	err = a.Client.GetKubeClient().UpdateServicesWithOwnerReferences(k8sComponents, ownerReference, a.Context)
 	if err != nil {
 		return err
 	}

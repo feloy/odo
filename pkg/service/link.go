@@ -5,23 +5,27 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
-	devfile "github.com/devfile/api/v2/pkg/apis/workspaces/v1alpha2"
-	"github.com/devfile/library/pkg/devfile/generator"
-	devfilefs "github.com/devfile/library/pkg/testingutil/filesystem"
-	"github.com/ghodss/yaml"
 	applabels "github.com/openshift/odo/pkg/application/labels"
 	componentlabels "github.com/openshift/odo/pkg/component/labels"
+	"github.com/openshift/odo/pkg/devfile"
 	"github.com/openshift/odo/pkg/kclient"
 	"github.com/openshift/odo/pkg/log"
+	"github.com/openshift/odo/pkg/service/utils"
+
+	workspaces "github.com/devfile/api/v2/pkg/apis/workspaces/v1alpha2"
+	"github.com/devfile/library/pkg/devfile/generator"
+	devfilefs "github.com/devfile/library/pkg/testingutil/filesystem"
+
+	"github.com/ghodss/yaml"
+
 	servicebinding "github.com/redhat-developer/service-binding-operator/apis/binding/v1alpha1"
+	"github.com/redhat-developer/service-binding-operator/pkg/reconcile/pipeline"
+	"github.com/redhat-developer/service-binding-operator/pkg/reconcile/pipeline/context"
+
 	v1 "k8s.io/api/apps/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/redhat-developer/service-binding-operator/pkg/reconcile/pipeline"
-	"github.com/redhat-developer/service-binding-operator/pkg/reconcile/pipeline/context"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -29,7 +33,7 @@ import (
 // PushLinks updates Link(s) from Kubernetes Inlined component in a devfile by creating new ones or removing old ones
 // returns true if the component needs to be restarted (when a link has been created or deleted)
 // if service binding operator is not present, it will call pushLinksWithoutOperator to create the links without it.
-func PushLinks(client kclient.ClientInterface, k8sComponents []devfile.Component, labels map[string]string, deployment *v1.Deployment, context string) (bool, error) {
+func PushLinks(client kclient.ClientInterface, k8sComponents []workspaces.Component, labels map[string]string, deployment *v1.Deployment, context string) (bool, error) {
 	serviceBindingSupport, err := client.IsServiceBindingSupported()
 	if err != nil {
 		return false, err
@@ -44,16 +48,16 @@ func PushLinks(client kclient.ClientInterface, k8sComponents []devfile.Component
 
 // pushLinksWithOperator creates links or deletes links (if service binding operator is installed) between components and services
 // returns true if the component needs to be restarted (a secret was generated and added to the deployment)
-func pushLinksWithOperator(client kclient.ClientInterface, k8sComponents []devfile.Component, labels map[string]string, deployment *v1.Deployment, context string) (bool, error) {
+func pushLinksWithOperator(client kclient.ClientInterface, k8sComponents []workspaces.Component, labels map[string]string, deployment *v1.Deployment, context string) (bool, error) {
 
 	ownerReference := generator.GetOwnerReference(deployment)
-	deployed, err := ListDeployedServices(client, labels)
+	deployed, err := client.ListDeployedServices(labels)
 	if err != nil {
 		return false, err
 	}
 
 	for key, deployedResource := range deployed {
-		if !deployedResource.isLinkResource {
+		if !deployedResource.IsLinkResource {
 			delete(deployed, key)
 		}
 	}
@@ -65,7 +69,7 @@ func pushLinksWithOperator(client kclient.ClientInterface, k8sComponents []devfi
 		// get the string representation of the YAML definition of a CRD
 		strCRD := c.Kubernetes.Inlined
 		if c.Kubernetes.Uri != "" {
-			strCRD, err = getDataFromURI(c.Kubernetes.Uri, context, devfilefs.DefaultFs{})
+			strCRD, err = devfile.GetDataFromURI(c.Kubernetes.Uri, context, devfilefs.DefaultFs{})
 			if err != nil {
 				return false, err
 			}
@@ -77,7 +81,7 @@ func pushLinksWithOperator(client kclient.ClientInterface, k8sComponents []devfi
 			return false, e
 		}
 
-		if !isLinkResource(u.GetKind()) {
+		if !utils.IsLinkResource(u.GetKind()) {
 			// operator hub is not installed on the cluster
 			// or it's a service binding related resource
 			continue
@@ -87,7 +91,7 @@ func pushLinksWithOperator(client kclient.ClientInterface, k8sComponents []devfi
 		u.SetOwnerReferences([]metav1.OwnerReference{ownerReference})
 		u.SetLabels(labels)
 
-		err = createOperatorService(client, u)
+		err = client.CreateOperatorService(u)
 		delete(deployed, u.GetKind()+"/"+crdName)
 		if err != nil {
 			if strings.Contains(err.Error(), "already exists") {
@@ -105,10 +109,10 @@ func pushLinksWithOperator(client kclient.ClientInterface, k8sComponents []devfi
 	}
 
 	for key, val := range deployed {
-		if !isLinkResource(val.Kind) {
+		if !utils.IsLinkResource(val.Kind) {
 			continue
 		}
-		err = DeleteOperatorService(client, key)
+		err = client.DeleteOperatorService(key)
 		if err != nil {
 			return false, err
 
@@ -126,7 +130,7 @@ func pushLinksWithOperator(client kclient.ClientInterface, k8sComponents []devfi
 
 // pushLinksWithoutOperator creates links or deletes links (if service binding operator is not installed) between components and services
 // returns true if the component needs to be restarted (a secret was generated and added to the deployment)
-func pushLinksWithoutOperator(client kclient.ClientInterface, k8sComponents []devfile.Component, labels map[string]string, deployment *v1.Deployment, context string) (bool, error) {
+func pushLinksWithoutOperator(client kclient.ClientInterface, k8sComponents []workspaces.Component, labels map[string]string, deployment *v1.Deployment, context string) (bool, error) {
 
 	// check csv support before proceeding
 	csvSupport, err := client.IsCSVSupported()
@@ -154,7 +158,7 @@ func pushLinksWithoutOperator(client kclient.ClientInterface, k8sComponents []de
 		// get the string representation of the YAML definition of a CRD
 		strCRD := c.Kubernetes.Inlined
 		if c.Kubernetes.Uri != "" {
-			strCRD, err = getDataFromURI(c.Kubernetes.Uri, context, devfilefs.DefaultFs{})
+			strCRD, err = devfile.GetDataFromURI(c.Kubernetes.Uri, context, devfilefs.DefaultFs{})
 			if err != nil {
 				return false, err
 			}
@@ -166,7 +170,7 @@ func pushLinksWithoutOperator(client kclient.ClientInterface, k8sComponents []de
 			return false, e
 		}
 
-		if !isLinkResource(u.GetKind()) {
+		if !utils.IsLinkResource(u.GetKind()) {
 			// not a service binding object, thus continue
 			continue
 		}
@@ -258,7 +262,7 @@ func pushLinksWithoutOperator(client kclient.ClientInterface, k8sComponents []de
 				continue
 			}
 
-			if !csvSupport && !isLinkResource(serviceBinding.Spec.Services[0].Kind) {
+			if !csvSupport && !utils.IsLinkResource(serviceBinding.Spec.Services[0].Kind) {
 				// ignore service binding objects linked to services if csv support is not present on the cluster
 				continue
 			}

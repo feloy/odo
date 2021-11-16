@@ -5,12 +5,13 @@ import (
 	"strings"
 
 	"github.com/openshift/odo/pkg/devfile/location"
-	"github.com/openshift/odo/pkg/service"
-
 	"github.com/openshift/odo/pkg/log"
 	"github.com/openshift/odo/pkg/odo/cli/ui"
 	"github.com/openshift/odo/pkg/odo/genericclioptions"
+	"github.com/openshift/odo/pkg/service/utils"
+
 	"github.com/spf13/cobra"
+
 	"k8s.io/klog"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
@@ -59,7 +60,7 @@ func (o *DeleteOptions) Complete(name string, cmd *cobra.Command, args []string)
 	}
 
 	o.serviceName = args[0]
-	_, _, err = service.SplitServiceKindName(o.serviceName)
+	_, _, err = utils.SplitServiceKindName(o.serviceName)
 	if err != nil {
 		return fmt.Errorf("invalid service name")
 	}

@@ -10,10 +10,12 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/go-openapi/spec"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/openshift/odo/pkg/machineoutput"
 	"github.com/openshift/odo/pkg/service"
+	"github.com/openshift/odo/pkg/service/utils"
+
+	"github.com/go-openapi/spec"
 	olm "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -36,7 +38,7 @@ func NewOperatorBackend() *operatorBackend {
 
 func (ohb *operatorBackend) CompleteDescribeService(dso *DescribeServiceOptions, args []string) error {
 	ohb.Name = args[0]
-	oprType, CR, err := service.SplitServiceKindName(ohb.Name)
+	oprType, CR, err := utils.SplitServiceKindName(ohb.Name)
 	if err != nil {
 		klog.V(2).Infof("could not determine csv, falling back to describing all of them")
 		oprType = args[0]

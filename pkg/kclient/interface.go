@@ -3,14 +3,18 @@ package kclient
 import (
 	"io"
 
-	"k8s.io/apimachinery/pkg/api/meta"
-
-	"github.com/go-openapi/spec"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/openshift/odo/pkg/unions"
+
+	devfile "github.com/devfile/api/v2/pkg/apis/workspaces/v1alpha2"
+	"github.com/devfile/library/pkg/devfile/parser"
+
+	"github.com/go-openapi/spec"
 	olm "github.com/operator-framework/api/pkg/operators/v1alpha1"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/discovery"
@@ -91,6 +95,19 @@ type ClientInterface interface {
 	GetCRDSpec(cr *olm.CRDDescription, resourceType string, resourceName string) (*spec.Schema, error)
 	GetRestMappingFromUnstructured(unstructured.Unstructured) (*meta.RESTMapping, error)
 	GetOperatorGVRList() ([]meta.RESTMapping, error)
+	IsOperatorBackedService(u unstructured.Unstructured) (bool, error)
+	CreateOperatorService(u unstructured.Unstructured) error
+	GetCRInstances(customResource *olm.CRDDescription) (*unstructured.UnstructuredList, error)
+	ListOperatorServices() ([]unstructured.Unstructured, []string, error)
+	ListDeployedServices(labels map[string]string) (map[string]DeployedInfo, error)
+	PushKubernetesResource(u unstructured.Unstructured, labels map[string]string) (bool, error)
+	DeleteOperatorService(serviceName string) error
+	PushKubernetesResources(k8sComponents []devfile.Component, labels map[string]string, context string) error
+	OperatorSvcExists(serviceName string) (bool, error)
+	UpdateServicesWithOwnerReferences(k8sComponents []devfile.Component, ownerReference metav1.OwnerReference, context string) error
+	ValidateResourceExist(k8sComponent devfile.Component, context string) (kindErr string, err error)
+	ValidateResourcesExist(k8sComponents []devfile.Component, context string) error
+	ListDevfileServices(devfileObj parser.DevfileObj, componentContext string) (map[string]unstructured.Unstructured, error)
 
 	// pods.go
 	WaitAndGetPodWithEvents(selector string, desiredPhase corev1.PodPhase, waitMessage string) (*corev1.Pod, error)

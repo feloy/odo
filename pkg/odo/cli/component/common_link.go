@@ -11,9 +11,11 @@ import (
 	"github.com/openshift/odo/pkg/occlient"
 	"github.com/openshift/odo/pkg/odo/genericclioptions"
 	svc "github.com/openshift/odo/pkg/service"
+
 	servicebinding "github.com/redhat-developer/service-binding-operator/apis/binding/v1alpha1"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
+
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -245,7 +247,7 @@ func (o *commonLinkOptions) validateForOperator() (err error) {
 		}
 		// let's validate if the service exists
 		svcFullName = strings.Join([]string{o.serviceType, o.serviceName}, "/")
-		svcExists, err := svc.OperatorSvcExists(o.KClient, svcFullName)
+		svcExists, err := o.KClient.OperatorSvcExists(svcFullName)
 		if err != nil {
 			return err
 		}

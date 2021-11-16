@@ -3,13 +3,15 @@ package component
 import (
 	"strings"
 
-	devfilev1 "github.com/devfile/api/v2/pkg/apis/workspaces/v1alpha2"
-	"github.com/devfile/library/pkg/devfile/parser"
-	devfilefs "github.com/devfile/library/pkg/testingutil/filesystem"
 	componentlabels "github.com/openshift/odo/pkg/component/labels"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/openshift/odo/pkg/occlient"
-	"github.com/openshift/odo/pkg/service"
+	"github.com/openshift/odo/pkg/service/utils"
+
+	devfilev1 "github.com/devfile/api/v2/pkg/apis/workspaces/v1alpha2"
+	"github.com/devfile/library/pkg/devfile/parser"
+	devfilefs "github.com/devfile/library/pkg/testingutil/filesystem"
+
 	"github.com/pkg/errors"
 )
 
@@ -33,17 +35,17 @@ func newComponentKubernetes(client occlient.Client, component devfilev1.Componen
 // Apply a component of type Kubernetes by creating resources into a Kubernetes cluster
 func (o componentKubernetes) Apply(devfileObj parser.DevfileObj, devfilePath string) error {
 	// validate if the GVRs represented by Kubernetes inlined components are supported by the underlying cluster
-	_, err := service.ValidateResourceExist(o.client.GetKubeClient(), o.component, devfilePath)
+	_, err := o.client.GetKubeClient().ValidateResourceExist(o.component, devfilePath)
 	if err != nil {
 		return err
 	}
 
 	labels := componentlabels.GetLabels(o.componentName, o.appName, true)
-	u, err := service.GetK8sComponentAsUnstructured(o.component.Kubernetes, devfilePath, devfilefs.DefaultFs{})
+	u, err := utils.GetK8sComponentAsUnstructured(o.component.Kubernetes, devfilePath, devfilefs.DefaultFs{})
 	if err != nil {
 		return err
 	}
-	isOperatorBackedService, err := service.PushKubernetesResource(o.client.GetKubeClient(), u, labels)
+	isOperatorBackedService, err := o.client.GetKubeClient().PushKubernetesResource(u, labels)
 	if err != nil {
 		return errors.Wrap(err, "failed to create service(s) associated with the component")
 	}

@@ -12,7 +12,7 @@ import (
 	cmplabels "github.com/openshift/odo/pkg/component/labels"
 	"github.com/openshift/odo/pkg/log"
 	"github.com/openshift/odo/pkg/machineoutput"
-	svc "github.com/openshift/odo/pkg/service"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -58,7 +58,7 @@ func (o *ServiceListOptions) listOperatorServices() (err error) {
 
 	// get the services deployed
 	var clusterList []unstructured.Unstructured
-	clusterList, failedListingCR, err := svc.ListOperatorServices(o.KClient)
+	clusterList, failedListingCR, err := o.KClient.ListOperatorServices()
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (o *ServiceListOptions) listOperatorServices() (err error) {
 	var devfileList map[string]unstructured.Unstructured
 	var devfileComponent string
 	if o.EnvSpecificInfo != nil {
-		devfileList, err = svc.ListDevfileServices(o.KClient, o.EnvSpecificInfo.GetDevfileObj(), o.componentContext)
+		devfileList, err = o.KClient.ListDevfileServices(o.EnvSpecificInfo.GetDevfileObj(), o.componentContext)
 		if err != nil {
 			return fmt.Errorf("error reading devfile")
 		}

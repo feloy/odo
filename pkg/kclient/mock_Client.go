@@ -8,6 +8,9 @@ import (
 	io "io"
 	reflect "reflect"
 
+	v1alpha2 "github.com/devfile/api/v2/pkg/apis/workspaces/v1alpha2"
+	parser "github.com/devfile/library/pkg/devfile/parser"
+	filesystem "github.com/devfile/library/pkg/testingutil/filesystem"
 	spec "github.com/go-openapi/spec"
 	gomock "github.com/golang/mock/gomock"
 	log "github.com/openshift/odo/pkg/log"
@@ -147,6 +150,20 @@ func (m *MockClientInterface) CreateNamespace(name string) (*v10.Namespace, erro
 func (mr *MockClientInterfaceMockRecorder) CreateNamespace(name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNamespace", reflect.TypeOf((*MockClientInterface)(nil).CreateNamespace), name)
+}
+
+// CreateOperatorService mocks base method.
+func (m *MockClientInterface) CreateOperatorService(u unstructured.Unstructured) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOperatorService", u)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateOperatorService indicates an expected call of CreateOperatorService.
+func (mr *MockClientInterfaceMockRecorder) CreateOperatorService(u interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOperatorService", reflect.TypeOf((*MockClientInterface)(nil).CreateOperatorService), u)
 }
 
 // CreatePVC mocks base method.
@@ -292,6 +309,20 @@ func (mr *MockClientInterfaceMockRecorder) DeleteNamespace(name, wait interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNamespace", reflect.TypeOf((*MockClientInterface)(nil).DeleteNamespace), name, wait)
 }
 
+// DeleteOperatorService mocks base method.
+func (m *MockClientInterface) DeleteOperatorService(serviceName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteOperatorService", serviceName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteOperatorService indicates an expected call of DeleteOperatorService.
+func (mr *MockClientInterfaceMockRecorder) DeleteOperatorService(serviceName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOperatorService", reflect.TypeOf((*MockClientInterface)(nil).DeleteOperatorService), serviceName)
+}
+
 // DeletePVC mocks base method.
 func (m *MockClientInterface) DeletePVC(pvcName string) error {
 	m.ctrl.T.Helper()
@@ -408,6 +439,21 @@ func (m *MockClientInterface) GetCRDSpec(cr *v1alpha1.CRDDescription, resourceTy
 func (mr *MockClientInterfaceMockRecorder) GetCRDSpec(cr, resourceType, resourceName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCRDSpec", reflect.TypeOf((*MockClientInterface)(nil).GetCRDSpec), cr, resourceType, resourceName)
+}
+
+// GetCRInstances mocks base method.
+func (m *MockClientInterface) GetCRInstances(customResource *v1alpha1.CRDDescription) (*unstructured.UnstructuredList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCRInstances", customResource)
+	ret0, _ := ret[0].(*unstructured.UnstructuredList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCRInstances indicates an expected call of GetCRInstances.
+func (mr *MockClientInterfaceMockRecorder) GetCRInstances(customResource interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCRInstances", reflect.TypeOf((*MockClientInterface)(nil).GetCRInstances), customResource)
 }
 
 // GetCSVWithCR mocks base method.
@@ -914,6 +960,21 @@ func (mr *MockClientInterfaceMockRecorder) IsDeploymentExtensionsV1Beta1() *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsDeploymentExtensionsV1Beta1", reflect.TypeOf((*MockClientInterface)(nil).IsDeploymentExtensionsV1Beta1))
 }
 
+// IsOperatorBackedService mocks base method.
+func (m *MockClientInterface) IsOperatorBackedService(u unstructured.Unstructured) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsOperatorBackedService", u)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsOperatorBackedService indicates an expected call of IsOperatorBackedService.
+func (mr *MockClientInterfaceMockRecorder) IsOperatorBackedService(u interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOperatorBackedService", reflect.TypeOf((*MockClientInterface)(nil).IsOperatorBackedService), u)
+}
+
 // IsResourceSupported mocks base method.
 func (m *MockClientInterface) IsResourceSupported(apiGroup, apiVersion, resourceName string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -987,6 +1048,21 @@ func (mr *MockClientInterfaceMockRecorder) ListClusterServiceVersions() *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListClusterServiceVersions", reflect.TypeOf((*MockClientInterface)(nil).ListClusterServiceVersions))
 }
 
+// ListDeployedServices mocks base method.
+func (m *MockClientInterface) ListDeployedServices(labels map[string]string) (map[string]DeployedInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDeployedServices", labels)
+	ret0, _ := ret[0].(map[string]DeployedInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDeployedServices indicates an expected call of ListDeployedServices.
+func (mr *MockClientInterfaceMockRecorder) ListDeployedServices(labels interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeployedServices", reflect.TypeOf((*MockClientInterface)(nil).ListDeployedServices), labels)
+}
+
 // ListDeployments mocks base method.
 func (m *MockClientInterface) ListDeployments(selector string) (*v1.DeploymentList, error) {
 	m.ctrl.T.Helper()
@@ -1000,6 +1076,21 @@ func (m *MockClientInterface) ListDeployments(selector string) (*v1.DeploymentLi
 func (mr *MockClientInterfaceMockRecorder) ListDeployments(selector interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeployments", reflect.TypeOf((*MockClientInterface)(nil).ListDeployments), selector)
+}
+
+// ListDevfileServices mocks base method.
+func (m *MockClientInterface) ListDevfileServices(devfileObj parser.DevfileObj, componentContext string) (map[string]unstructured.Unstructured, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDevfileServices", devfileObj, componentContext)
+	ret0, _ := ret[0].(map[string]unstructured.Unstructured)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDevfileServices indicates an expected call of ListDevfileServices.
+func (mr *MockClientInterfaceMockRecorder) ListDevfileServices(devfileObj, componentContext interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDevfileServices", reflect.TypeOf((*MockClientInterface)(nil).ListDevfileServices), devfileObj, componentContext)
 }
 
 // ListDynamicResource mocks base method.
@@ -1030,6 +1121,22 @@ func (m *MockClientInterface) ListIngresses(labelSelector string) (*unions.Kuber
 func (mr *MockClientInterfaceMockRecorder) ListIngresses(labelSelector interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListIngresses", reflect.TypeOf((*MockClientInterface)(nil).ListIngresses), labelSelector)
+}
+
+// ListOperatorServices mocks base method.
+func (m *MockClientInterface) ListOperatorServices() ([]unstructured.Unstructured, []string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListOperatorServices")
+	ret0, _ := ret[0].([]unstructured.Unstructured)
+	ret1, _ := ret[1].([]string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListOperatorServices indicates an expected call of ListOperatorServices.
+func (mr *MockClientInterfaceMockRecorder) ListOperatorServices() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOperatorServices", reflect.TypeOf((*MockClientInterface)(nil).ListOperatorServices))
 }
 
 // ListPVCNames mocks base method.
@@ -1092,6 +1199,50 @@ func (mr *MockClientInterfaceMockRecorder) ListServices(selector interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServices", reflect.TypeOf((*MockClientInterface)(nil).ListServices), selector)
 }
 
+// OperatorSvcExists mocks base method.
+func (m *MockClientInterface) OperatorSvcExists(serviceName string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OperatorSvcExists", serviceName)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// OperatorSvcExists indicates an expected call of OperatorSvcExists.
+func (mr *MockClientInterfaceMockRecorder) OperatorSvcExists(serviceName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OperatorSvcExists", reflect.TypeOf((*MockClientInterface)(nil).OperatorSvcExists), serviceName)
+}
+
+// PushKubernetesResource mocks base method.
+func (m *MockClientInterface) PushKubernetesResource(u unstructured.Unstructured, labels map[string]string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PushKubernetesResource", u, labels)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PushKubernetesResource indicates an expected call of PushKubernetesResource.
+func (mr *MockClientInterfaceMockRecorder) PushKubernetesResource(u, labels interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushKubernetesResource", reflect.TypeOf((*MockClientInterface)(nil).PushKubernetesResource), u, labels)
+}
+
+// PushKubernetesResources mocks base method.
+func (m *MockClientInterface) PushKubernetesResources(k8sComponents []v1alpha2.Component, labels map[string]string, context string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PushKubernetesResources", k8sComponents, labels, context)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PushKubernetesResources indicates an expected call of PushKubernetesResources.
+func (mr *MockClientInterfaceMockRecorder) PushKubernetesResources(k8sComponents, labels, context interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushKubernetesResources", reflect.TypeOf((*MockClientInterface)(nil).PushKubernetesResources), k8sComponents, labels, context)
+}
+
 // SearchClusterServiceVersionList mocks base method.
 func (m *MockClientInterface) SearchClusterServiceVersionList(name string) (*v1alpha1.ClusterServiceVersionList, error) {
 	m.ctrl.T.Helper()
@@ -1143,6 +1294,21 @@ func (m *MockClientInterface) SetNamespace(ns string) {
 func (mr *MockClientInterfaceMockRecorder) SetNamespace(ns interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNamespace", reflect.TypeOf((*MockClientInterface)(nil).SetNamespace), ns)
+}
+
+// SubListDevfileServices mocks base method.
+func (m *MockClientInterface) SubListDevfileServices(devfileObj parser.DevfileObj, componentContext string, fs filesystem.Filesystem) (map[string]unstructured.Unstructured, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SubListDevfileServices", devfileObj, componentContext, fs)
+	ret0, _ := ret[0].(map[string]unstructured.Unstructured)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SubListDevfileServices indicates an expected call of SubListDevfileServices.
+func (mr *MockClientInterfaceMockRecorder) SubListDevfileServices(devfileObj, componentContext, fs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubListDevfileServices", reflect.TypeOf((*MockClientInterface)(nil).SubListDevfileServices), devfileObj, componentContext, fs)
 }
 
 // UnlinkSecret mocks base method.
@@ -1232,6 +1398,20 @@ func (mr *MockClientInterfaceMockRecorder) UpdateService(svc interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateService", reflect.TypeOf((*MockClientInterface)(nil).UpdateService), svc)
 }
 
+// UpdateServicesWithOwnerReferences mocks base method.
+func (m *MockClientInterface) UpdateServicesWithOwnerReferences(k8sComponents []v1alpha2.Component, ownerReference v11.OwnerReference, context string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateServicesWithOwnerReferences", k8sComponents, ownerReference, context)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateServicesWithOwnerReferences indicates an expected call of UpdateServicesWithOwnerReferences.
+func (mr *MockClientInterfaceMockRecorder) UpdateServicesWithOwnerReferences(k8sComponents, ownerReference, context interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateServicesWithOwnerReferences", reflect.TypeOf((*MockClientInterface)(nil).UpdateServicesWithOwnerReferences), k8sComponents, ownerReference, context)
+}
+
 // UpdateStorageOwnerReference mocks base method.
 func (m *MockClientInterface) UpdateStorageOwnerReference(pvc *v10.PersistentVolumeClaim, ownerReference ...v11.OwnerReference) error {
 	m.ctrl.T.Helper()
@@ -1249,6 +1429,35 @@ func (mr *MockClientInterfaceMockRecorder) UpdateStorageOwnerReference(pvc inter
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{pvc}, ownerReference...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStorageOwnerReference", reflect.TypeOf((*MockClientInterface)(nil).UpdateStorageOwnerReference), varargs...)
+}
+
+// ValidateResourceExist mocks base method.
+func (m *MockClientInterface) ValidateResourceExist(k8sComponent v1alpha2.Component, context string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateResourceExist", k8sComponent, context)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ValidateResourceExist indicates an expected call of ValidateResourceExist.
+func (mr *MockClientInterfaceMockRecorder) ValidateResourceExist(k8sComponent, context interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateResourceExist", reflect.TypeOf((*MockClientInterface)(nil).ValidateResourceExist), k8sComponent, context)
+}
+
+// ValidateResourcesExist mocks base method.
+func (m *MockClientInterface) ValidateResourcesExist(k8sComponents []v1alpha2.Component, context string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateResourcesExist", k8sComponents, context)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateResourcesExist indicates an expected call of ValidateResourcesExist.
+func (mr *MockClientInterfaceMockRecorder) ValidateResourcesExist(k8sComponents, context interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateResourcesExist", reflect.TypeOf((*MockClientInterface)(nil).ValidateResourcesExist), k8sComponents, context)
 }
 
 // WaitAndGetPodWithEvents mocks base method.
