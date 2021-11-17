@@ -20,7 +20,6 @@ import (
 	"github.com/openshift/odo/pkg/odo/genericclioptions"
 	odoutil "github.com/openshift/odo/pkg/odo/util"
 	"github.com/openshift/odo/pkg/odo/util/completion"
-	"github.com/openshift/odo/pkg/service"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
@@ -162,13 +161,13 @@ func (do *DeleteOptions) Run(cmd *cobra.Command) (err error) {
 					return err
 				}
 
-				empty, err := util.IsEmpty(filepath.Join(do.componentContext, service.UriFolder))
+				empty, err := util.IsEmpty(filepath.Join(do.componentContext, devfile.UriFolder))
 				if err != nil && !os.IsNotExist(err) {
 					return err
 				}
 
 				if !os.IsNotExist(err) && empty {
-					err = os.RemoveAll(filepath.Join(do.componentContext, service.UriFolder))
+					err = os.RemoveAll(filepath.Join(do.componentContext, devfile.UriFolder))
 					if err != nil {
 						return err
 					}
@@ -201,13 +200,13 @@ func (do *DeleteOptions) Run(cmd *cobra.Command) (err error) {
 				return err
 			}
 
-			empty, err := util.IsEmpty(filepath.Join(do.componentContext, service.UriFolder))
+			empty, err := util.IsEmpty(filepath.Join(do.componentContext, devfile.UriFolder))
 			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
 
 			if !os.IsNotExist(err) && empty {
-				err = os.RemoveAll(filepath.Join(do.componentContext, service.UriFolder))
+				err = os.RemoveAll(filepath.Join(do.componentContext, devfile.UriFolder))
 				if err != nil {
 					return err
 				}
