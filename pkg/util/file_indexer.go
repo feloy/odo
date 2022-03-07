@@ -3,13 +3,14 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/monochromegane/go-gitignore"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/monochromegane/go-gitignore"
 
 	"github.com/pkg/errors"
 
@@ -452,16 +453,32 @@ func recursiveChecker(pathOptions recursiveCheckerPathOptions, ignoreRules []str
 		fmt.Println(it)
 	}
 	fmt.Println("************************")
-	ignoreMatcher = GetIgnoreMatcherFromRules(pathOptions.directory, ignoreRules)
+	cwd, err := os.Getwd()
+	if err != nil {
+		return IndexerRet{}, err
+	}
+	rel, err := filepath.Rel(pathOptions.directory, cwd)
+	if err != nil {
+		return IndexerRet{}, err
+	}
+	ignoreMatcher = GetIgnoreMatcherFromRules(rel, GetRelGlobExps(pathOptions.directory, ignoreRules))
+	if err != nil {
+		return IndexerRet{}, err
+	}
 
 	for _, matchedPath := range matchedPathsDir {
 		stat, err := os.Stat(matchedPath)
+		isDir := stat.IsDir()
 		if err != nil {
 			return IndexerRet{}, err
 		}
 
+		rel, err := filepath.Rel(pathOptions.directory, matchedPath)
+		if err != nil {
+			continue // TODO
+		}
 		// check if it matches a ignore rule
-		match := ignoreMatcher.Match(matchedPath, stat.IsDir())
+		match := ignoreMatcher.Match(rel, isDir)
 		//match, err := dfutil.IsGlobExpMatch(matchedPath, ignoreRules)
 		//if err != nil {
 		//	return IndexerRet{}, err

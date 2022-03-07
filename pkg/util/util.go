@@ -751,3 +751,17 @@ func SafeGetBool(b *bool) bool {
 func GetAdler32Value(s string) string {
 	return fmt.Sprintf("%08x", adler32.Checksum([]byte(s)))
 }
+
+func GetRelGlobExps(directory string, globExps []string) []string {
+	relGlobExps := []string{}
+	for _, globExp := range globExps {
+		// for glob matching with the library
+		// the relative paths in the glob expressions need to be converted to absolute paths
+		rel, err := filepath.Rel(directory, globExp)
+		if err != nil {
+			continue // TODO
+		}
+		relGlobExps = append(relGlobExps, rel)
+	}
+	return relGlobExps
+}
