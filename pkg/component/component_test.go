@@ -141,6 +141,151 @@ func TestGetComponentFrom(t *testing.T) {
 	}
 }
 
+func Test_RemoveDuplicateComponentsForListingOutput(t *testing.T) {
+	type args struct {
+		components []Component
+	}
+	tests := []struct {
+		name string
+		args args
+		want []Component
+	}{
+		{
+			name: "Case 1: Remove duplicated component with the same labels.",
+			args: args{
+				components: []Component{
+					{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "Component",
+							APIVersion: "odo.dev/v1alpha1",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "frontend",
+							Labels: map[string]string{
+								componentlabels.OdoModeLabel:             componentlabels.ComponentDevName,
+								componentlabels.KubernetesInstanceLabel:  "frontend",
+								componentlabels.KubernetesManagedByLabel: "odo",
+							},
+						},
+						Spec: ComponentSpec{
+							Type: "nodejs",
+						},
+						Status: ComponentStatus{},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "Component",
+							APIVersion: "odo.dev/v1alpha1",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "frontend",
+							Labels: map[string]string{
+								componentlabels.OdoModeLabel:             componentlabels.ComponentDevName,
+								componentlabels.KubernetesInstanceLabel:  "frontend",
+								componentlabels.KubernetesManagedByLabel: "odo",
+							},
+						},
+						Spec: ComponentSpec{
+							Type: "nodejs",
+						},
+						Status: ComponentStatus{},
+					},
+				},
+			},
+			want: []Component{
+				{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "Component",
+						APIVersion: "odo.dev/v1alpha1",
+					},
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "frontend",
+						Labels: map[string]string{
+							componentlabels.OdoModeLabel:             componentlabels.ComponentDevName,
+							componentlabels.KubernetesInstanceLabel:  "frontend",
+							componentlabels.KubernetesManagedByLabel: "odo",
+						},
+					},
+					Spec: ComponentSpec{
+						Type: "nodejs",
+					},
+					Status: ComponentStatus{},
+				},
+			},
+		},
+		{
+			name: "Case 2: Combine duplicated Dev + Deploy component to one with Dev and Deploy label.",
+			args: args{
+				components: []Component{
+					{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "Component",
+							APIVersion: "odo.dev/v1alpha1",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "frontend",
+							Labels: map[string]string{
+								componentlabels.OdoModeLabel:             componentlabels.ComponentDeployName,
+								componentlabels.KubernetesInstanceLabel:  "frontend",
+								componentlabels.KubernetesManagedByLabel: "odo",
+							},
+						},
+						Spec: ComponentSpec{
+							Type: "nodejs",
+						},
+						Status: ComponentStatus{},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "Component",
+							APIVersion: "odo.dev/v1alpha1",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "frontend",
+							Labels: map[string]string{
+								componentlabels.OdoModeLabel:             componentlabels.ComponentDevName,
+								componentlabels.KubernetesInstanceLabel:  "frontend",
+								componentlabels.KubernetesManagedByLabel: "odo",
+							},
+						},
+						Spec: ComponentSpec{
+							Type: "nodejs",
+						},
+						Status: ComponentStatus{},
+					},
+				},
+			},
+			want: []Component{
+				{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "Component",
+						APIVersion: "odo.dev/v1alpha1",
+					},
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "frontend",
+						Labels: map[string]string{
+							componentlabels.OdoModeLabel:             fmt.Sprintf("%s, %s", componentlabels.ComponentDevName, componentlabels.ComponentDeployName),
+							componentlabels.KubernetesInstanceLabel:  "frontend",
+							componentlabels.KubernetesManagedByLabel: "odo",
+						},
+					},
+					Spec: ComponentSpec{
+						Type: "nodejs",
+					},
+					Status: ComponentStatus{},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RemoveDuplicateComponentsForListingOutput(tt.args.components); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getMachineReadableFormatForList() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestList(t *testing.T) {
 	deploymentList := v1.DeploymentList{Items: []v1.Deployment{
 		*testingutil.CreateFakeDeployment("comp0"),

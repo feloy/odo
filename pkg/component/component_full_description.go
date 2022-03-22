@@ -84,7 +84,7 @@ func NewComponentFullDescriptionFromClientAndLocalConfigProvider(client kclient.
 	var devfile devfileParser.DevfileObj
 	var err error
 	var configLinks []string
-	componentDesc, devfile, err = GetComponentFromDevfile(envInfo)
+	componentDesc, devfile, err = GetComponentFromEnvfile(envInfo)
 	if err != nil {
 		return cfd, err
 	}
