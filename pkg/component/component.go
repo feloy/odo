@@ -140,28 +140,28 @@ func Contains(component Component, components []Component) bool {
 // If we encounter 2 components with the same name with Dev and Deploy modes, combines them and display "Dev, Deploy"
 func RemoveDuplicateComponentsForListingOutput(components []Component) []Component {
 
-	var outputComp []Component
+	var outputComponents []Component
 
-	// Loop through all the components
+	// Loop through all the components and merge / combine all annotations + labels so it's the same.
 	for _, component := range components {
-		found := false
-		for _, check := range outputComp {
+		componentLabel := component.GetLabels()
+		componentAnnotation := component.GetAnnotations()
+
+		for _, check := range components {
 
 			// Make the variable names a bit shorter for readability
-			componentLabel, checkLabel := component.ObjectMeta.Labels, check.ObjectMeta.Labels
+			checkLabel := check.GetLabels()
+			checkAnnotation := check.GetAnnotations()
 
 			// If we find ones that match the same instance label
 			if componentLabel[componentlabels.KubernetesInstanceLabel] == checkLabel[componentlabels.KubernetesInstanceLabel] {
-
-				// Mark as found
-				found = true
 
 				// Sometimes Kubernetes operators deploy an ingress / service / etc via an operator but do NOT include a
 				// "app.kubernetes.io/managed-by" label. So when we "deduplicate" the component list, this may appear blank.
 				// If it's blank, and there is an instance of the same name with a managed-by label, we propagate that to the output
 				// components
-				if componentLabel[componentlabels.KubernetesManagedByLabel] != "" && checkLabel[componentlabels.KubernetesManagedByLabel] == "" {
-					checkLabel[componentlabels.KubernetesManagedByLabel] = componentLabel[componentlabels.KubernetesManagedByLabel]
+				if componentLabel[componentlabels.KubernetesManagedByLabel] == "" && checkLabel[componentlabels.KubernetesManagedByLabel] != "" {
+					component.ObjectMeta.Labels[componentlabels.KubernetesManagedByLabel] = checkLabel[componentlabels.KubernetesManagedByLabel]
 				}
 
 				// Check if there are TWO components, one in dev, one in deploy. If so, we will keep the *first* component, and
@@ -174,22 +174,37 @@ func RemoveDuplicateComponentsForListingOutput(components []Component) []Compone
 				if (componentMode != checkMode) &&
 					(componentMode == componentlabels.ComponentDevName || componentMode == componentlabels.ComponentDeployName) &&
 					(checkMode == componentlabels.ComponentDevName || checkMode == componentlabels.ComponentDeployName) {
-					checkLabel[componentlabels.OdoModeLabel] = fmt.Sprintf("%s, %s", componentlabels.ComponentDevName, componentlabels.ComponentDeployName)
+					component.ObjectMeta.Labels[componentlabels.OdoModeLabel] = fmt.Sprintf("%s, %s", componentlabels.ComponentDevName, componentlabels.ComponentDeployName)
 				}
 
-				// Set the labels in the end
-				check.SetLabels(checkLabel)
+				// Some components have no annotations (ex. knative), so must propagage the ObjectMeta with initial annotations.
+				if component.ObjectMeta.Annotations == nil {
+					component.ObjectMeta.Annotations = make(map[string]string)
+				}
+
+				// Check to see if the next component has a project type annotation, and update the component accordingly if it does.
+				if componentAnnotation[componentlabels.OdoProjectTypeAnnotation] == "" && checkAnnotation[componentlabels.OdoProjectTypeAnnotation] != "" {
+					component.ObjectMeta.Annotations[componentlabels.OdoProjectTypeAnnotation] = checkAnnotation[componentlabels.OdoProjectTypeAnnotation]
+				}
+
 			}
 		}
 
-		// If not found, append to the component output
+		// Go through the output list, and add the component if it hasn't already been added.
+		found := false
+		for _, outputComponent := range outputComponents {
+			// Go by component name instead of instance-of
+			if outputComponent.Name == component.Name {
+				found = true
+				break
+			}
+		}
 		if !found {
-			outputComp = append(outputComp, component)
+			outputComponents = append(outputComponents, component)
 		}
 
 	}
-
-	return outputComp
+	return outputComponents
 }
 
 // ListAllClusterComponents returns a list of all "components" on a cluster
@@ -209,9 +224,15 @@ func ListAllClusterComponents(client kclient.ClientInterface, namespace string) 
 
 	for _, resource := range resourceList {
 
+		var labels, annotations map[string]string
+
 		// Retrieve the labels and annotations from the unstructured resource output
-		labels := resource.GetLabels()
-		annotations := resource.GetAnnotations()
+		if resource.GetLabels() != nil {
+			labels = resource.GetLabels()
+		}
+		if resource.GetAnnotations() != nil {
+			annotations = resource.GetAnnotations()
+		}
 
 		// Figure out the correct name to use
 		if labels[componentlabels.KubernetesInstanceLabel] == "" {

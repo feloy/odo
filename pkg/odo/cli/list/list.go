@@ -131,19 +131,14 @@ func (lo *ListOptions) Run() error {
 
 	// Step 1.
 	// Retrieve all related components from the Kubernetes cluster, from the given namespace
-	if lo.clientset.KubernetesClient != nil {
+	listSpinner := log.Spinnerf("Listing components from namespace '%s'", lo.namespaceFilter)
+	defer listSpinner.End(false)
 
-		// Create a spinner since this function takes up 99% of `odo list` time
-		listSpinner := log.Spinnerf("Listing components from namespace '%s'", lo.namespaceFilter)
-		defer listSpinner.End(false)
-
-		var err error
-		devfileComponents, err = component.ListAllClusterComponents(lo.clientset.KubernetesClient, lo.namespaceFilter)
-		if err != nil {
-			return err
-		}
-		listSpinner.End(true)
+	devfileComponents, err := component.ListAllClusterComponents(lo.clientset.KubernetesClient, lo.namespaceFilter)
+	if err != nil {
+		return err
 	}
+	listSpinner.End(true)
 
 	// Step 2.
 	// If we have a local component, let's add it to the list of Devfiles
@@ -239,15 +234,21 @@ func (lo *ListOptions) HumanReadableOutput(wr io.Writer, components []component.
 			name := text.Colors{text.FgHiYellow}.Sprint(comp.Name)
 
 			// Get the managed by label
-			managedBy := comp.ObjectMeta.Labels[labels.KubernetesManagedByLabel]
+			managedBy := comp.GetLabels()[labels.KubernetesManagedByLabel]
 			if managedBy == "" {
 				managedBy = component.StateTypeUnknown
 			}
 
 			// Get the mode (dev or deploy)
-			mode := comp.ObjectMeta.Labels[labels.OdoModeLabel]
+			mode := comp.GetLabels()[labels.OdoModeLabel]
 			if mode == "" {
 				mode = component.StateTypeUnknown
+			}
+
+			// Get the type of the component
+			componentType := comp.GetAnnotations()[labels.OdoProjectTypeAnnotation]
+			if componentType == "" {
+				componentType = component.StateTypeUnknown
 			}
 
 			// If we find our local unpushed component, let's change the output appropriately.
@@ -273,7 +274,7 @@ func (lo *ListOptions) HumanReadableOutput(wr io.Writer, components []component.
 				managedBy = text.Colors{text.FgBlue}.Sprint("odo")
 			}
 
-			t.AppendRow(table.Row{name, comp.Spec.Type, mode, managedBy})
+			t.AppendRow(table.Row{name, componentType, mode, managedBy})
 		}
 		t.Render()
 	}

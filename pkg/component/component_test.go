@@ -264,7 +264,7 @@ func Test_RemoveDuplicateComponentsForListingOutput(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "frontend",
 						Labels: map[string]string{
-							componentlabels.OdoModeLabel:             fmt.Sprintf("%s, %s", componentlabels.ComponentDevName, componentlabels.ComponentDeployName),
+							componentlabels.OdoModeLabel:             "Dev, Deploy",
 							componentlabels.KubernetesInstanceLabel:  "frontend",
 							componentlabels.KubernetesManagedByLabel: "odo",
 						},
@@ -279,8 +279,9 @@ func Test_RemoveDuplicateComponentsForListingOutput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := RemoveDuplicateComponentsForListingOutput(tt.args.components); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getMachineReadableFormatForList() = %v, want %v", got, tt.want)
+			// Use pretty.Compare instead of DeepEqual as DeepEqual does not compare it correctly with nested objects
+			if got := RemoveDuplicateComponentsForListingOutput(tt.args.components); pretty.Compare(got, tt.want) != "" {
+				t.Errorf("unexpected output, see the diff in results: %s", pretty.Compare(got, tt.want))
 			}
 		})
 	}
