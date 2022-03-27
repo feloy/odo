@@ -10,6 +10,14 @@ import (
 
 const ComponentKind = "Component"
 
+// OdoComponent
+type OdoComponent struct {
+	Name      string
+	ManagedBy string
+	Modes     map[string]bool
+	Type      string
+}
+
 // Component
 type Component struct {
 	metav1.TypeMeta   `json:",inline"`

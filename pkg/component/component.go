@@ -212,15 +212,15 @@ func RemoveDuplicateComponentsForListingOutput(components []Component) []Compone
 //
 // We then return a list of "components" intended for listing / output purposes specifically for commands such as:
 // `odo list`
-func ListAllClusterComponents(client kclient.ClientInterface, namespace string) ([]Component, error) {
+func ListAllClusterComponents(client kclient.ClientInterface, namespace string) ([]OdoComponent, error) {
 
 	// Get all the dynamic resources available
 	resourceList, err := client.GetAllResourcesFromSelector("", namespace)
 	if err != nil {
-		return []Component{}, fmt.Errorf("unable to list all dynamic resources required to find components: %w", err)
+		return nil, fmt.Errorf("unable to list all dynamic resources required to find components: %w", err)
 	}
 
-	var components []Component
+	var components []OdoComponent
 
 	for _, resource := range resourceList {
 
@@ -250,29 +250,35 @@ func ListAllClusterComponents(client kclient.ClientInterface, namespace string) 
 		}
 
 		// Generate the appropriate "component" with all necessary information
-		component := Component{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       resource.GetKind(),
-				APIVersion: resource.GetAPIVersion(),
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        name,
-				Namespace:   namespace,
-				Labels:      labels,
-				Annotations: annotations,
-			},
-			Spec: ComponentSpec{
-				Type: componentType,
-			},
-			Status: ComponentStatus{
-				State: StateTypeUnknown,
-			},
+		component := OdoComponent{
+			Name:      name,
+			ManagedBy: labels[componentlabels.KubernetesManagedByLabel],
+			Type:      componentType,
 		}
-
-		if !reflect.ValueOf(component).IsZero() {
+		mode := labels[componentlabels.OdoModeLabel]
+		found := false
+		for _, otherCompo := range components {
+			if component.Name == otherCompo.Name {
+				found = true
+				if mode != "" {
+					otherCompo.Modes[mode] = true
+				}
+				if otherCompo.Type == StateTypeUnknown {
+					otherCompo.Type = componentType
+				}
+				break
+			}
+		}
+		if !found {
+			if mode != "" {
+				component.Modes = map[string]bool{
+					mode: true,
+				}
+			} else {
+				component.Modes = map[string]bool{}
+			}
 			components = append(components, component)
 		}
-
 	}
 
 	return components, nil

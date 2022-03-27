@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/redhat-developer/odo/pkg/component/labels"
-	componentlabels "github.com/redhat-developer/odo/pkg/component/labels"
 	"github.com/redhat-developer/odo/pkg/devfile"
 	"github.com/redhat-developer/odo/pkg/devfile/location"
 	"github.com/redhat-developer/odo/pkg/machineoutput"
@@ -127,7 +127,7 @@ func (lo *ListOptions) Validate() (err error) {
 func (lo *ListOptions) Run() error {
 
 	// All variables pertaining to output / combination
-	devfileComponents := []component.Component{}
+	devfileComponents := []component.OdoComponent{}
 
 	// Step 1.
 	// Retrieve all related components from the Kubernetes cluster, from the given namespace
@@ -140,14 +140,16 @@ func (lo *ListOptions) Run() error {
 	}
 	listSpinner.End(true)
 
+	_ = devfileComponents
+
 	// Step 2.
 	// If we have a local component, let's add it to the list of Devfiles
 	// This checks lo.localComponent.Name. If it's empty, we didn't parse one in the Complete() function, so there is no local devfile.
 	// We will only append the local component to the devfile if it doesn't exist in the list.
-	if (lo.localComponent.Name != "") && !component.Contains(lo.localComponent, devfileComponents) {
-		devfileComponents = append(devfileComponents, lo.localComponent)
-	}
-
+	//if (lo.localComponent.Name != "") && !component.Contains(lo.localComponent, devfileComponents) {
+	//	devfileComponents = append(devfileComponents, lo.localComponent)
+	//}
+	//
 	if log.IsJSON() {
 		machineoutput.OutputSuccess(devfileComponents)
 	} else {
@@ -182,7 +184,7 @@ func NewCmdList(name, fullName string) *cobra.Command {
 	return listCmd
 }
 
-func (lo *ListOptions) HumanReadableOutput(wr io.Writer, components []component.Component) {
+func (lo *ListOptions) HumanReadableOutput(wr io.Writer, components []component.OdoComponent) {
 	if len(components) == 0 {
 		log.Info("There are no components deployed.")
 		return
@@ -191,7 +193,7 @@ func (lo *ListOptions) HumanReadableOutput(wr io.Writer, components []component.
 	if len(components) != 0 {
 
 		// First, let's remove all duplicated components
-		components = component.RemoveDuplicateComponentsForListingOutput(components)
+		//components = component.RemoveDuplicateComponentsForListingOutput(components)
 
 		// Create the table and use our own style
 		t := table.NewWriter()
@@ -234,40 +236,48 @@ func (lo *ListOptions) HumanReadableOutput(wr io.Writer, components []component.
 			name := text.Colors{text.FgHiYellow}.Sprint(comp.Name)
 
 			// Get the managed by label
-			managedBy := comp.GetLabels()[labels.KubernetesManagedByLabel]
+			managedBy := comp.ManagedBy
 			if managedBy == "" {
 				managedBy = component.StateTypeUnknown
 			}
 
 			// Get the mode (dev or deploy)
-			mode := comp.GetLabels()[labels.OdoModeLabel]
-			if mode == "" {
+			modes := comp.Modes
+			var mode string
+			if len(modes) == 0 {
 				mode = component.StateTypeUnknown
+			} else {
+				keys := make([]string, 0, len(modes))
+				for k := range modes {
+					keys = append(keys, k)
+				}
+				sort.Strings(keys)
+				mode = strings.Join(keys, ", ")
 			}
 
 			// Get the type of the component
-			componentType := comp.GetAnnotations()[labels.OdoProjectTypeAnnotation]
+			componentType := comp.Type
 			if componentType == "" {
 				componentType = component.StateTypeUnknown
 			}
 
-			// If we find our local unpushed component, let's change the output appropriately.
-			if (lo.localComponent.Name == comp.Name) && (lo.localComponent.Spec.Type == comp.Spec.Type) {
-				name = fmt.Sprintf("* %s", name)
-
-				// We do not propagate the component yet with ObjectMeta data, so we must check if it's nil if it's not pushed
-				// and update it manually.
-				if comp.ObjectMeta.Labels == nil {
-					managedBy = "odo"
-				}
-
-				// Now... if it's not pushed yet, change the output so it's nicer.
-				if comp.Status.State == component.StateTypeNotPushed {
-
-					// Change the mode to None if it's unpushed..
-					mode = componentlabels.ComponentNoneName
-				}
-			}
+			//			// If we find our local unpushed component, let's change the output appropriately.
+			//			if (lo.localComponent.Name == comp.Name) && (lo.localComponent.Spec.Type == comp.Spec.Type) {
+			//				name = fmt.Sprintf("* %s", name)
+			//
+			//				// We do not propagate the component yet with ObjectMeta data, so we must check if it's nil if it's not pushed
+			//				// and update it manually.
+			//				if comp.ObjectMeta.Labels == nil {
+			//					managedBy = "odo"
+			//				}
+			//
+			//				// Now... if it's not pushed yet, change the output so it's nicer.
+			//				if comp.Status.State == component.StateTypeNotPushed {
+			//
+			//					// Change the mode to None if it's unpushed..
+			//					mode = componentlabels.ComponentNoneName
+			//				}
+			//			}
 
 			// If we are managing that component, output it as blue (our logo colour) to indicate it's used by odo
 			if managedBy == "odo" {
