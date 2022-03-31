@@ -605,15 +605,19 @@ func copyDirWithFS(src string, dst string, fs filesystem.Filesystem) error {
 }
 
 // StartSignalWatcher watches for signals and handles the situation before exiting the program
-func StartSignalWatcher(watchSignals []os.Signal, handle func(receivedSignal os.Signal)) {
+// If handle returns true, the process will exit, otherwise the signal watcher will be restarted
+func StartSignalWatcher(watchSignals []os.Signal, handle func(receivedSignal os.Signal) bool) {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, watchSignals...)
 	defer signal.Stop(signals)
 
 	receivedSignal := <-signals
-	handle(receivedSignal)
-	// exit here to stop spinners from rotating
-	os.Exit(1)
+	if handle(receivedSignal) {
+		// exit here to stop spinners from rotating
+		os.Exit(1)
+	} else {
+		StartSignalWatcher(watchSignals, handle)
+	}
 }
 
 // cleanDir cleans the original folder during events like interrupted copy etc
@@ -651,7 +655,7 @@ func GitSubDir(srcPath, destinationPath, subDir string) error {
 
 // gitSubDir handles subDir for git components
 func gitSubDir(srcPath, destinationPath, subDir string, fs filesystem.Filesystem) error {
-	go StartSignalWatcher([]os.Signal{syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, os.Interrupt}, func(_ os.Signal) {
+	go StartSignalWatcher([]os.Signal{syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, os.Interrupt}, func(_ os.Signal) bool {
 		err := cleanDir(destinationPath, map[string]bool{
 			"devfile.yaml": true,
 		}, fs)
@@ -662,6 +666,7 @@ func gitSubDir(srcPath, destinationPath, subDir string, fs filesystem.Filesystem
 		if err != nil {
 			klog.V(4).Infof("error %v occurred during temp folder clean up", err)
 		}
+		return true
 	})
 
 	err := func() error {

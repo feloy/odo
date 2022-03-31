@@ -80,16 +80,23 @@ func GenericRun(o Runnable, cmd *cobra.Command, args []string) {
 
 	// Send data to telemetry in case of user interrupt
 	captureSignals := []os.Signal{syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT, os.Interrupt}
-	go commonutil.StartSignalWatcher(captureSignals, func(receivedSignal os.Signal) {
+	interruptCount := 0
+	go commonutil.StartSignalWatcher(captureSignals, func(receivedSignal os.Signal) bool {
 		err := fmt.Errorf("user interrupted the command execution: %w", terminal.InterruptErr)
-		if handler, ok := o.(SignalHandler); ok {
-			err = handler.HandleSignal()
-			if err != nil {
-				log.Errorf("failed to delete resources from Kubernetes cluster: %v", err)
+		interruptCount++
+		if interruptCount == 1 {
+			if handler, ok := o.(SignalHandler); ok {
+				err = handler.HandleSignal()
+				if err != nil {
+					log.Errorf("failed to delete resources from Kubernetes cluster: %v", err)
+				}
+				// We want the signal watcher to restart, without exiting
+				return false
 			}
 		}
 		scontext.SetSignal(cmd.Context(), receivedSignal)
 		startTelemetry(cmd, err, startTime)
+		return true
 	})
 
 	// CheckMachineReadableOutput
