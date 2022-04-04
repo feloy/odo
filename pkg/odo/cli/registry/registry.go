@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/redhat-developer/odo/pkg/catalog"
 	"github.com/redhat-developer/odo/pkg/log"
 	"github.com/redhat-developer/odo/pkg/odo/cmdline"
 	"github.com/redhat-developer/odo/pkg/odo/genericclioptions"
@@ -39,20 +38,8 @@ func (o *RegistryOptions) Validate() error {
 func (o *RegistryOptions) Run() (err error) {
 
 	devfileEntries, _ := o.clientset.CatalogClient.ListDevfileComponents("")
-	langs := devfileEntries.GetLanguages()
-	result := make(map[string]map[string]catalog.DevfileComponentType)
-	for _, lang := range langs {
-		types := devfileEntries.GetProjectTypes(lang)
-		result[lang] = make(map[string]catalog.DevfileComponentType)
-
-		labels := types.GetOrderedLabels()
-		for i, label := range labels {
-			comp, _ := types.GetAtOrderedPosition(i)
-			result[lang][label] = comp
-		}
-	}
 	if log.IsJSON() {
-		b, err := json.Marshal(result)
+		b, err := json.Marshal(devfileEntries.Items)
 		if err != nil {
 			return err
 		}
