@@ -7,6 +7,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/redhat-developer/odo/pkg/odo/cli/alizer"
 	"github.com/redhat-developer/odo/pkg/odo/cli/build_images"
 	_delete "github.com/redhat-developer/odo/pkg/odo/cli/delete"
 	"github.com/redhat-developer/odo/pkg/odo/cli/deploy"
@@ -171,6 +172,7 @@ func odoRootCmd(name, fullName string) *cobra.Command {
 		dev.NewCmdDev(dev.RecommendedCommandName, util.GetFullName(fullName, dev.RecommendedCommandName)),
 		registry.NewCmdRegistry(registry.RecommendedCommandName, util.GetFullName(fullName, registry.RecommendedCommandName)),
 		devfile.NewCmdDevfile(devfile.RecommendedCommandName, util.GetFullName(fullName, devfile.RecommendedCommandName)),
+		alizer.NewCmdAlizer(alizer.RecommendedCommandName, util.GetFullName(fullName, alizer.RecommendedCommandName)),
 	)
 
 	// Add all subcommands to base commands

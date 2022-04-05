@@ -178,8 +178,13 @@ func (o *InitOptions) Run(ctx context.Context) (err error) {
 	scontext.SetProjectType(ctx, devfileObj.Data.GetMetadata().ProjectType)
 	scontext.SetDevfileName(ctx, devfileObj.GetMetadataName())
 
+	if log.IsJSON() {
+		fmt.Printf(`{ "devfile-path": %q }`, devfilePath)
+		return nil
+	}
+
 	exitMessage := fmt.Sprintf(`
-Your new component %q is ready in the current directory.
+		Your new component %q is ready in the current directory.
 To start editing your component, use "odo dev" and open this folder in your favorite IDE.
 Changes will be directly reflected on the cluster.`, devfileObj.Data.GetMetadata().Name)
 
@@ -193,7 +198,6 @@ Changes will be directly reflected on the cluster.`, devfileObj.Data.GetMetadata
 		exitMessage += "\nTo deploy your component to a cluster use \"odo deploy\"."
 	}
 	log.Info(exitMessage)
-
 	return nil
 }
 
@@ -212,6 +216,7 @@ func NewCmdInit(name, fullName string) *cobra.Command {
 		},
 	}
 	clientset.Add(initCmd, clientset.PREFERENCE, clientset.FILESYSTEM, clientset.REGISTRY, clientset.INIT)
+	initCmd.Annotations["machineoutput"] = "json"
 
 	initCmd.Flags().String(backend.FLAG_NAME, "", "name of the component to create")
 	initCmd.Flags().String(backend.FLAG_DEVFILE, "", "name of the devfile in devfile registry")
