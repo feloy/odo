@@ -148,7 +148,13 @@ func (lo *ListOptions) Run(ctx context.Context) error {
 	}
 
 	if log.IsJSON() {
-		machineoutput.OutputSuccess(devfileComponents)
+		machineoutput.OutputSuccess(struct {
+			Namespace  string                   `json:"namespace"`
+			Components []component.OdoComponent `json:"components"`
+		}{
+			Namespace:  lo.namespaceFilter,
+			Components: devfileComponents,
+		})
 	} else {
 		lo.HumanReadableOutput(log.GetStdout(), devfileComponents)
 	}
