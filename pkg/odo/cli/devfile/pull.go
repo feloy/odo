@@ -1,6 +1,7 @@
 package devfile
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -83,7 +84,7 @@ func (o *PullOptions) Validate() error {
 }
 
 // Run contains the logic for the odo command
-func (o *PullOptions) Run() (err error) {
+func (o *PullOptions) Run(ctx context.Context) (err error) {
 	err = o.clientset.InitClient.DownloadStarterProject(&o.starterProject, o.cwd)
 	if err != nil {
 		return err

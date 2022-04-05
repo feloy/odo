@@ -1,6 +1,7 @@
 package devfile
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -57,7 +58,7 @@ func (o *InfoOptions) Validate() error {
 }
 
 // Run contains the logic for the odo command
-func (o *InfoOptions) Run() (err error) {
+func (o *InfoOptions) Run(ctx context.Context) (err error) {
 	if log.IsJSON() {
 		b, err := json.Marshal(o.devfileObj.Data)
 		if err != nil {
