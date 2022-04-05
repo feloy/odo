@@ -19,10 +19,10 @@ type Component struct {
 
 // OdoComponent
 type OdoComponent struct {
-	Name      string
-	ManagedBy string
-	Modes     map[string]bool
-	Type      string
+	Name      string          `json:"name"`
+	ManagedBy string          `json:"managed-by"`
+	Modes     map[string]bool `json:"modes"`
+	Type      string          `json:"type"`
 }
 
 // ComponentSpec is spec of components
