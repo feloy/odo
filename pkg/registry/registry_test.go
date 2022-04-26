@@ -122,28 +122,6 @@ func TestListDevfileStacks(t *testing.T) {
 	// Close the server when test finishes
 	defer server.Close()
 
-	// Create a temporary file with the above server URL
-	tempConfigFile, err := ioutil.TempFile("", "odoconfig")
-	if err != nil {
-		t.Fatal("Fail to create temporary config file")
-	}
-	defer os.Remove(tempConfigFile.Name())
-	defer tempConfigFile.Close()
-	_, err = tempConfigFile.Write([]byte(
-		`kind: Preference
-apiversion: odo.openshift.io/v1alpha1
-OdoSettings:
-  RegistryList:
-  - Name: TestRegistry
-    URL: ` + server.URL,
-	))
-	if err != nil {
-		t.Error(err)
-	}
-
-	os.Setenv(preference.GlobalConfigEnvName, tempConfigFile.Name())
-	defer os.Unsetenv(preference.GlobalConfigEnvName)
-
 	const registryName = "TestRegistry"
 	tests := []struct {
 		name         string
@@ -219,7 +197,14 @@ OdoSettings:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			prefClient, _ := preference.NewClient()
+			ctrl := gomock.NewController(t)
+			prefClient := preference.NewMockClient(ctrl)
+			prefClient.EXPECT().RegistryList().Return(&[]preference.Registry{
+				{
+					Name: "TestRegistry",
+					URL:  server.URL,
+				},
+			}).AnyTimes()
 			catClient := NewRegistryClient(filesystem.NewFakeFs(), prefClient)
 			got, err := catClient.ListDevfileStacks(tt.registryName)
 			if err != nil {
