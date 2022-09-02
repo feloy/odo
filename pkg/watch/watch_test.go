@@ -138,7 +138,6 @@ func Test_eventWatcher(t *testing.T) {
 				warningsWatcher:   fakeWatcher{},
 				devfileWatcher:    fileWatcher,
 				keyWatcher:        make(chan byte),
-				contextCancel:     func() {},
 			}
 			err := o.eventWatcher(ctx, tt.args.parameters, out, evaluateChangesHandler, processEventsHandler, componentStatus)
 			if (err != nil) != tt.wantErr {

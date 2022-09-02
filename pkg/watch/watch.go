@@ -49,7 +49,6 @@ type WatchClient struct {
 	podWatcher        watch.Interface
 	warningsWatcher   watch.Interface
 	keyWatcher        chan byte
-	contextCancel     func()
 
 	// true to force sync, used when manual sync
 	forceSync bool
@@ -172,9 +171,7 @@ func (o *WatchClient) WatchAndPush(out io.Writer, parameters WatchParameters, ct
 		log.Fwarning(out, "Unable to watch Events resource, warning Events won't be displayed")
 	}
 
-	var cancellableContext context.Context
-	cancellableContext, o.contextCancel = context.WithCancel(ctx)
-	o.keyWatcher = getKeyWatcher(cancellableContext)
+	o.keyWatcher = getKeyWatcher(ctx)
 	return o.eventWatcher(ctx, parameters, out, evaluateFileChanges, processEvents, componentStatus)
 }
 
@@ -350,7 +347,6 @@ func (o *WatchClient) eventWatcher(
 			return watchErr
 
 		case <-ctx.Done():
-			o.contextCancel()
 			return errors.New("Dev mode interrupted by user")
 		}
 	}
