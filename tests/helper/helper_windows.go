@@ -6,6 +6,7 @@ package helper
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"syscall"
 
@@ -39,5 +40,42 @@ func setSysProcAttr(command *exec.Cmd) {
 }
 
 func startOnTerminal(console *expect.Console, command *exec.Cmd, outWriter io.Writer, errWriter io.Writer) (*gexec.Session, error) {
-	return gexec.Start(command, outWriter, errWriter)
+	var argv []string
+	if len(command.Args) > 0 {
+		argv = command.Args
+	} else {
+		argv = []string{command.Path}
+	}
+
+	var envv []string
+	if command.Env != nil {
+		envv = command.Env
+	} else {
+		envv = os.Environ()
+	}
+	pid, _, err := console.Pty.Spawn(command.Path, argv, &syscall.ProcAttr{
+		Dir: command.Dir,
+		Env: envv,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to spawn process in terminal: %w", err)
+	}
+
+	// Let's pray that this always works.  Unfortunately we cannot create our process from a process handle.
+	command.Process, err = os.FindProcess(pid)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create an os.Process struct: %w", err)
+	}
+
+	exited := make(chan struct{})
+
+	session := &Session{
+		Command:  command,
+		Out:      gbytes.NewBuffer(),
+		Err:      gbytes.NewBuffer(),
+		Exited:   exited,
+		lock:     &sync.Mutex{},
+		exitCode: -1,
+	}
+	// return gexec.Start(command, outWriter, errWriter)
 }
