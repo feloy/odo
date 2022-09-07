@@ -4,6 +4,7 @@
 package helper
 
 import (
+	"io"
 	"os/exec"
 
 	"github.com/onsi/gomega/gexec"
@@ -15,3 +16,7 @@ func terminateProc(session *gexec.Session) error {
 }
 
 func setSysProcAttr(command *exec.Cmd) {}
+
+func startOnTerminal(command *exec.Cmd, outWriter io.Writer, errWriter io.Writer) (*gexec.Session, error) {
+	return gexec.Start(command, outWriter, errWriter)
+}

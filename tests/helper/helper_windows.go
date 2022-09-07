@@ -35,3 +35,7 @@ func setSysProcAttr(command *exec.Cmd) {
 		CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP,
 	}
 }
+
+func startOnTerminal(command *exec.Cmd, outWriter io.Writer, errWriter io.Writer) (*gexec.Session, error) {
+	return gexec.Start(command, outWriter, errWriter)
+}

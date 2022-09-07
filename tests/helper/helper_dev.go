@@ -128,6 +128,8 @@ func StartDevMode(envvars []string, opts ...string) (DevSession, []byte, []byte,
 	args := []string{"dev", "--random-ports"}
 	args = append(args, opts...)
 	cmd := Cmd("odo", args...)
+
+	// Unix only?
 	cmd.Cmd.Stdin = c.Tty()
 	cmd.Cmd.Stdout = c.Tty()
 	cmd.Cmd.Stderr = c.Tty()

@@ -42,7 +42,7 @@ func Cmd(program string, args ...string) *CmdWrapper {
 
 func (cw *CmdWrapper) Runner() *CmdWrapper {
 	fmt.Fprintln(GinkgoWriter, runningCmd(cw.Cmd))
-	cw.session, cw.err = gexec.Start(cw.Cmd, cw.writer, cw.writer)
+	cw.session, cw.err = startOnTerminal(cw.Cmd, cw.writer, cw.writer)
 	timeout := time.After(cw.timeout)
 	if cw.timeout > 0 {
 		select {
