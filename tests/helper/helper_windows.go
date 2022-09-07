@@ -8,9 +8,11 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"sync"
 	"syscall"
 
 	"github.com/ActiveState/termtest/expect"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"golang.org/x/sys/windows"
 )
@@ -69,7 +71,7 @@ func startOnTerminal(console *expect.Console, command *exec.Cmd, outWriter io.Wr
 
 	exited := make(chan struct{})
 
-	session := &Session{
+	session := &gexec.Session{
 		Command:  command,
 		Out:      gbytes.NewBuffer(),
 		Err:      gbytes.NewBuffer(),
