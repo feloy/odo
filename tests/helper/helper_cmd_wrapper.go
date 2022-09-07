@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/ActiveState/termtest/expect"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -25,6 +26,13 @@ type CmdWrapper struct {
 	err             error
 	maxRetry        int
 	pass            bool
+	console         *expect.Console
+}
+
+func CmdOnConsole(c *expect.Console, program string, args ...string) *CmdWrapper {
+	wrapper := Cmd(program, args...)
+	wrapper.console = c
+	return wrapper
 }
 
 func Cmd(program string, args ...string) *CmdWrapper {
@@ -42,7 +50,11 @@ func Cmd(program string, args ...string) *CmdWrapper {
 
 func (cw *CmdWrapper) Runner() *CmdWrapper {
 	fmt.Fprintln(GinkgoWriter, runningCmd(cw.Cmd))
-	cw.session, cw.err = startOnTerminal(cw.Cmd, cw.writer, cw.writer)
+	if cw.console != nil {
+		cw.session, cw.err = startOnTerminal(cw.console, cw.Cmd, cw.writer, cw.writer)
+	} else {
+		cw.session, cw.err = gexec.Start(cw.Cmd, cw.writer, cw.writer)
+	}
 	timeout := time.After(cw.timeout)
 	if cw.timeout > 0 {
 		select {

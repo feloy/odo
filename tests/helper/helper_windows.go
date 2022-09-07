@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"syscall"
 
+	"github.com/ActiveState/termtest/expect"
 	"github.com/onsi/gomega/gexec"
 	"golang.org/x/sys/windows"
 )
@@ -37,6 +38,6 @@ func setSysProcAttr(command *exec.Cmd) {
 	}
 }
 
-func startOnTerminal(command *exec.Cmd, outWriter io.Writer, errWriter io.Writer) (*gexec.Session, error) {
+func startOnTerminal(console *expect.Console, command *exec.Cmd, outWriter io.Writer, errWriter io.Writer) (*gexec.Session, error) {
 	return gexec.Start(command, outWriter, errWriter)
 }

@@ -7,6 +7,7 @@ import (
 	"io"
 	"os/exec"
 
+	"github.com/ActiveState/termtest/expect"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -17,6 +18,10 @@ func terminateProc(session *gexec.Session) error {
 
 func setSysProcAttr(command *exec.Cmd) {}
 
-func startOnTerminal(command *exec.Cmd, outWriter io.Writer, errWriter io.Writer) (*gexec.Session, error) {
+func startOnTerminal(console *expect.Console, command *exec.Cmd, outWriter io.Writer, errWriter io.Writer) (*gexec.Session, error) {
+	command.Stdin = console.Tty()
+	command.Stdout = console.Tty()
+	command.Stderr = console.Tty()
+
 	return gexec.Start(command, outWriter, errWriter)
 }

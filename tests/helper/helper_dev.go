@@ -127,12 +127,7 @@ func StartDevMode(envvars []string, opts ...string) (DevSession, []byte, []byte,
 
 	args := []string{"dev", "--random-ports"}
 	args = append(args, opts...)
-	cmd := Cmd("odo", args...)
-
-	// Unix only?
-	cmd.Cmd.Stdin = c.Tty()
-	cmd.Cmd.Stdout = c.Tty()
-	cmd.Cmd.Stderr = c.Tty()
+	cmd := CmdOnConsole(c, "odo", args...)
 
 	session := cmd.AddEnv(envvars...).Runner().session
 	WaitForOutputToContain("Press Ctrl+c to exit `odo dev` and delete resources from the cluster", 360, 10, session)
