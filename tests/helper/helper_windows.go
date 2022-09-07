@@ -44,27 +44,30 @@ func startOnTerminal(console *expect.Console, command *exec.Cmd, outWriter io.Wr
 
 	exited := make(chan struct{})
 
+	prOut, pwOut := io.Pipe()
+	prErr, pwErr := io.Pipe()
+
 	session := &gexec.Session{
 		Command: command,
-		Out:     gbytes.NewBuffer(),
-		Err:     gbytes.NewBuffer(),
+		Out:     gbytes.BufferReadr(prOut),
+		Err:     gbytes.BufferReadr(prErr),
 		Exited:  exited,
 	}
 
 	var commandOut, commandErr io.Writer
 
-	commandOut, commandErr = session.Out, session.Err
+	//  commandOut, commandErr = session.Out, session.Err
 
-	if outWriter != nil {
-		commandOut = io.MultiWriter(commandOut, outWriter)
-	}
-
-	if errWriter != nil {
-		commandErr = io.MultiWriter(commandErr, errWriter)
-	}
-
-	command.Stdout = commandOut
-	command.Stderr = commandErr
+	//	if outWriter != nil {
+	//		commandOut = io.MultiWriter(commandOut, outWriter)
+	//	}
+	//
+	//	if errWriter != nil {
+	//		commandErr = io.MultiWriter(commandErr, errWriter)
+	//	}
+	//
+	//	command.Stdout = commandOut
+	//	command.Stderr = commandErr
 
 	var argv []string
 	if len(command.Args) > 0 {
@@ -82,6 +85,11 @@ func startOnTerminal(console *expect.Console, command *exec.Cmd, outWriter io.Wr
 	pid, _, err := console.Pty.Spawn(command.Path, argv, &syscall.ProcAttr{
 		Dir: command.Dir,
 		Env: envv,
+		Files: []uintptr{
+			console.Pty.Stdin,
+			pwOut,
+			pwErr,
+		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to spawn process in terminal: %w", err)
