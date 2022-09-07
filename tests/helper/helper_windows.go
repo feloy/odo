@@ -41,6 +41,31 @@ func setSysProcAttr(command *exec.Cmd) {
 }
 
 func startOnTerminal(console *expect.Console, command *exec.Cmd, outWriter io.Writer, errWriter io.Writer) (*gexec.Session, error) {
+
+	exited := make(chan struct{})
+
+	session := &gexec.Session{
+		Command: command,
+		Out:     gbytes.NewBuffer(),
+		Err:     gbytes.NewBuffer(),
+		Exited:  exited,
+	}
+
+	var commandOut, commandErr io.Writer
+
+	commandOut, commandErr = session.Out, session.Err
+
+	if outWriter != nil {
+		commandOut = io.MultiWriter(commandOut, outWriter)
+	}
+
+	if errWriter != nil {
+		commandErr = io.MultiWriter(commandErr, errWriter)
+	}
+
+	command.Stdout = commandOut
+	command.Stderr = commandErr
+
 	var argv []string
 	if len(command.Args) > 0 {
 		argv = command.Args
@@ -68,14 +93,6 @@ func startOnTerminal(console *expect.Console, command *exec.Cmd, outWriter io.Wr
 		return nil, fmt.Errorf("Failed to create an os.Process struct: %w", err)
 	}
 
-	exited := make(chan struct{})
-
-	session := &gexec.Session{
-		Command: command,
-		Out:     gbytes.NewBuffer(),
-		Err:     gbytes.NewBuffer(),
-		Exited:  exited,
-	}
 	return session, nil
 	// return gexec.Start(command, outWriter, errWriter)
 }
