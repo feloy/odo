@@ -72,12 +72,11 @@ func startOnTerminal(console *expect.Console, command *exec.Cmd, outWriter io.Wr
 	exited := make(chan struct{})
 
 	session := &gexec.Session{
-		Command:  command,
-		Out:      gbytes.NewBuffer(),
-		Err:      gbytes.NewBuffer(),
-		Exited:   exited,
-		lock:     &sync.Mutex{},
-		exitCode: -1,
+		Command: command,
+		Out:     gbytes.NewBuffer(),
+		Err:     gbytes.NewBuffer(),
+		Exited:  exited,
 	}
+	return session, nil
 	// return gexec.Start(command, outWriter, errWriter)
 }
