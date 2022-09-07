@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Netflix/go-expect"
+	"github.com/ActiveState/termtest/expect"
 	"github.com/onsi/gomega"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
