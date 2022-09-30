@@ -180,7 +180,7 @@ var _ = Describe("odo dev command tests", func() {
 				Expect(helper.CreateFileWithContent(stateFile, "")).ToNot(HaveOccurred())
 				Expect(os.Chmod(stateFile, 0400)).ToNot(HaveOccurred())
 			})
-			It("should fail running odo dev", func() {
+			XIt("should fail running odo dev", func() {
 				res := helper.Cmd("odo", "dev", "--random-ports").ShouldFail()
 				stdout := res.Out()
 				stderr := res.Err()
