@@ -23,6 +23,7 @@ limitations under the License.
 package log
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -36,6 +37,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/redhat-developer/odo/pkg/log/fidget"
+	odocontext "github.com/redhat-developer/odo/pkg/odo/context"
 )
 
 // Spacing for logging
@@ -238,10 +240,27 @@ func Printf(format string, a ...interface{}) {
 	}
 }
 
+// CtxPrintf will output in an appropriate "information" manner; for e.g.
+// • <message>
+func CtxPrintf(ctx context.Context, format string, a ...interface{}) {
+	if !IsJSON() {
+		stdout := odocontext.GetStdout(ctx)
+		fmt.Fprintf(stdout, "%s%s%s%s\n", prefixSpacing, getSpacingString(), suffixSpacing, fmt.Sprintf(format, a...))
+	}
+}
+
 // Println will output a new line when applicable
 func Println() {
 	if !IsJSON() {
 		fmt.Fprintln(GetStdout())
+	}
+}
+
+// CtxPrintln will output a new line when applicable
+func CtxPrintln(ctx context.Context) {
+	if !IsJSON() {
+		stdout := odocontext.GetStdout(ctx)
+		fmt.Fprintln(stdout)
 	}
 }
 
@@ -288,6 +307,17 @@ func Warningf(format string, a ...interface{}) {
 	if !IsJSON() {
 		yellow := color.New(color.FgYellow).SprintFunc()
 		fmt.Fprintf(GetStderr(), " %s%s%s\n", yellow(getWarningString()), suffixSpacing, fmt.Sprintf(format, a...))
+	}
+}
+
+// CtxWarningf will output in an appropriate "warning" manner
+//
+//	⚠ <message>
+func CtxWarningf(ctx context.Context, format string, a ...interface{}) {
+	if !IsJSON() {
+		stderr := odocontext.GetStderr(ctx)
+		yellow := color.New(color.FgYellow).SprintFunc()
+		fmt.Fprintf(stderr, " %s%s%s\n", yellow(getWarningString()), suffixSpacing, fmt.Sprintf(format, a...))
 	}
 }
 
@@ -384,12 +414,32 @@ func Errorf(format string, a ...interface{}) {
 	}
 }
 
+// CtxErrorf will output in an appropriate "progress" manner
+// ✗ <message>
+func CtxErrorf(ctx context.Context, format string, a ...interface{}) {
+	if !IsJSON() {
+		stderr := odocontext.GetStderr(ctx)
+		red := color.New(color.FgRed).SprintFunc()
+		fmt.Fprintf(stderr, " %s%s%s\n", red(getErrString()), suffixSpacing, fmt.Sprintf(format, a...))
+	}
+}
+
 // Error will output in an appropriate "progress" manner
 // ✗ <message>
 func Error(a ...interface{}) {
 	if !IsJSON() {
 		red := color.New(color.FgRed).SprintFunc()
 		fmt.Fprintf(GetStderr(), "%s%s%s%s", prefixSpacing, red(getErrString()), suffixSpacing, fmt.Sprintln(a...))
+	}
+}
+
+// CtxError will output in an appropriate "progress" manner
+// ✗ <message>
+func CtxError(ctx context.Context, a ...interface{}) {
+	if !IsJSON() {
+		stderr := odocontext.GetStderr(ctx)
+		red := color.New(color.FgRed).SprintFunc()
+		fmt.Fprintf(stderr, "%s%s%s%s", prefixSpacing, red(getErrString()), suffixSpacing, fmt.Sprintln(a...))
 	}
 }
 
@@ -403,6 +453,18 @@ func Info(a ...interface{}) {
 	}
 }
 
+// CtxInfo will simply print out information on a new (bolded) line
+// this is intended as information *after* something has been deployed
+// **Line in bold**
+// This will also use a WRITER from the context
+func CtxInfo(ctx context.Context, a ...interface{}) {
+	if !IsJSON() {
+		stdout := odocontext.GetStdout(ctx)
+		bold := color.New(color.Bold).SprintFunc()
+		fmt.Fprintf(stdout, "%s", bold(fmt.Sprintln(a...)))
+	}
+}
+
 // Infof will simply print out information on a new (bolded) line
 // this is intended as information *after* something has been deployed
 // **Line in bold**
@@ -410,6 +472,17 @@ func Infof(format string, a ...interface{}) {
 	if !IsJSON() {
 		bold := color.New(color.Bold).SprintFunc()
 		fmt.Fprintf(GetStdout(), "%s\n", bold(fmt.Sprintf(format, a...)))
+	}
+}
+
+// Infof will simply print out information on a new (bolded) line
+// this is intended as information *after* something has been deployed
+// **Line in bold**
+func CtxInfof(ctx context.Context, format string, a ...interface{}) {
+	if !IsJSON() {
+		stdout := odocontext.GetStdout(ctx)
+		bold := color.New(color.Bold).SprintFunc()
+		fmt.Fprintf(stdout, "%s\n", bold(fmt.Sprintf(format, a...)))
 	}
 }
 
