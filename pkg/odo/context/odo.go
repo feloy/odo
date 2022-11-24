@@ -2,6 +2,7 @@ package context
 
 import (
 	"context"
+	"io"
 
 	"github.com/devfile/library/pkg/devfile/parser"
 )
@@ -12,6 +13,8 @@ type (
 	devfilePathKeyType   struct{}
 	devfileObjKeyType    struct{}
 	componentNameKeyType struct{}
+	stdoutKeyType        struct{}
+	stderrKeyType        struct{}
 )
 
 var (
@@ -20,6 +23,8 @@ var (
 	devfilePathKey   devfilePathKeyType
 	devfileObjKey    devfileObjKeyType
 	componentNameKey componentNameKeyType
+	stdoutKey        stdoutKeyType
+	stderrKey        stderrKeyType
 )
 
 // WithApplication sets the value of the application in ctx
@@ -109,4 +114,38 @@ func GetComponentName(ctx context.Context) string {
 		return cast
 	}
 	panic("this should not happen, either the original context is not passed or WithComponentName is not called as it should. Check that FILESYSTEM dependency is added to the command")
+}
+
+// WithStdout sets the standard output writer in ctx
+// This function must be called before using GetStdout
+func WithStdout(ctx context.Context, w io.Writer) context.Context {
+	return context.WithValue(ctx, stdoutKey, w)
+}
+
+// GetStdout gets the standard output writer in ctx
+// This function will panic if the context does not contain the value
+// Use this function only with a context obtained from Complete/Validate/Run/... methods of Runnable interface
+func GetStdout(ctx context.Context) io.Writer {
+	value := ctx.Value(stdoutKey)
+	if cast, ok := value.(io.Writer); ok {
+		return cast
+	}
+	panic("this should not happen, either the original context is not passed or WithStdout is not called as it should")
+}
+
+// WithStderr sets the standard error writer in ctx
+// This function must be called before using GetStderr
+func WithStderr(ctx context.Context, w io.Writer) context.Context {
+	return context.WithValue(ctx, stderrKey, w)
+}
+
+// GetStderr gets the standard error writer in ctx
+// This function will panic if the context does not contain the value
+// Use this function only with a context obtained from Complete/Validate/Run/... methods of Runnable interface
+func GetStderr(ctx context.Context) io.Writer {
+	value := ctx.Value(stderrKey)
+	if cast, ok := value.(io.Writer); ok {
+		return cast
+	}
+	panic("this should not happen, either the original context is not passed or WithStderr is not called as it should")
 }

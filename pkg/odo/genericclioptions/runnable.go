@@ -189,7 +189,8 @@ func GenericRun(o Runnable, cmd *cobra.Command, args []string) {
 	ctx = fcontext.WithJsonOutput(ctx, commonflags.GetJsonOutputValue(cmdLineObj))
 	ctx = fcontext.WithRunOn(ctx, platform)
 	ctx = odocontext.WithApplication(ctx, defaultAppName)
-
+	ctx = odocontext.WithStdout(ctx, log.GetStdout())
+	ctx = odocontext.WithStderr(ctx, log.GetStderr())
 	if deps.KubernetesClient != nil {
 		namespace := deps.KubernetesClient.GetCurrentNamespace()
 		ctx = odocontext.WithNamespace(ctx, namespace)
