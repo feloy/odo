@@ -1,6 +1,7 @@
 package component
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -94,6 +95,9 @@ func TestComponentOptions_deleteNamedComponent(t *testing.T) {
 				},
 			}
 			ctx := odocontext.WithApplication(context.TODO(), "app")
+			var stdout, stderr bytes.Buffer
+			ctx = odocontext.WithStdout(ctx, &stdout)
+			ctx = odocontext.WithStderr(ctx, &stderr)
 			if err := o.deleteNamedComponent(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("ComponentOptions.deleteNamedComponent() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -217,6 +221,9 @@ func TestComponentOptions_deleteDevfileComponent(t *testing.T) {
 			ctx = odocontext.WithWorkingDirectory(ctx, workingDir)
 			ctx = odocontext.WithComponentName(ctx, compName)
 			ctx = odocontext.WithDevfileObj(ctx, &info)
+			var stdout, stderr bytes.Buffer
+			ctx = odocontext.WithStdout(ctx, &stdout)
+			ctx = odocontext.WithStderr(ctx, &stderr)
 			if err = o.deleteDevfileComponent(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("deleteDevfileComponent() error = %v, wantErr %v", err, tt.wantErr)
 			}
