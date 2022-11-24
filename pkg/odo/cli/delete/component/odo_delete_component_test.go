@@ -1,6 +1,7 @@
 package component
 
 import (
+	"bytes"
 	"context"
 	"path/filepath"
 	"strings"
@@ -41,6 +42,7 @@ func TestOdoDeleteComponent(t *testing.T) {
 		args           []string
 		wantErr        bool
 		checkErr       func(err error) bool
+		checkOutputs   func(stdout, stderr string) bool
 		mockKubeClient func(kclient *kclient.MockClientInterface)
 	}{
 		{
@@ -117,6 +119,15 @@ func TestOdoDeleteComponent(t *testing.T) {
 				withFilesFlag: true,
 			},
 			wantErr: false,
+			checkOutputs: func(stdout, stderr string) bool {
+				if !strings.Contains(stdout, `No resource found for component "nodejs-app" in namespace "ns1"`) {
+					return false
+				}
+				if len(stderr) > 0 {
+					return false
+				}
+				return true
+			},
 			mockKubeClient: func(kclient *kclient.MockClientInterface) {
 				deploymentName := "nodejs-app"
 				deployment := appsv1.Deployment{}
@@ -155,7 +166,10 @@ func TestOdoDeleteComponent(t *testing.T) {
 				t.Errorf("unexpected err %v", err)
 			}
 
-			deps.FS.MkdirAll(_workdir, 0644)
+			err = deps.FS.MkdirAll(_workdir, 0644)
+			if err != nil {
+				t.Errorf("unexpected err %v", err)
+			}
 
 			o := &ComponentOptions{
 				name:          tt.flags.name,
@@ -167,6 +181,9 @@ func TestOdoDeleteComponent(t *testing.T) {
 			}
 
 			ctx, err := tt.ctx(context.Background())
+			var stdout, stderr bytes.Buffer
+			ctx = odocontext.WithStdout(ctx, &stdout)
+			ctx = odocontext.WithStderr(ctx, &stderr)
 			if err != nil {
 				t.Errorf("unexpected error when building context: %v", err)
 			}
@@ -180,6 +197,9 @@ func TestOdoDeleteComponent(t *testing.T) {
 				if !tt.checkErr(err) {
 					t.Errorf("unexpected error: %v", err)
 				}
+				if tt.checkOutputs != nil {
+					tt.checkOutputs(stdout.String(), stderr.String())
+				}
 				return
 			}
 
@@ -190,6 +210,9 @@ func TestOdoDeleteComponent(t *testing.T) {
 				}
 				if !tt.checkErr(err) {
 					t.Errorf("unexpected error: %v", err)
+				}
+				if tt.checkOutputs != nil {
+					tt.checkOutputs(stdout.String(), stderr.String())
 				}
 				return
 			}
@@ -202,11 +225,18 @@ func TestOdoDeleteComponent(t *testing.T) {
 				if !tt.checkErr(err) {
 					t.Errorf("unexpected error: %v", err)
 				}
+				if tt.checkOutputs != nil {
+					tt.checkOutputs(stdout.String(), stderr.String())
+				}
 				return
 			}
 
 			if tt.wantErr {
 				t.Errorf("no error happened, but error is expected")
+			}
+
+			if tt.checkOutputs != nil {
+				tt.checkOutputs(stdout.String(), stderr.String())
 			}
 		})
 
