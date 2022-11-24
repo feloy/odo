@@ -104,26 +104,26 @@ func (o *ComponentOptions) Run(ctx context.Context) error {
 
 // deleteNamedComponent deletes a component given its name
 func (o *ComponentOptions) deleteNamedComponent(ctx context.Context) error {
-	log.Info("Searching resources to delete, please wait...")
+	log.CtxInfo(ctx, "Searching resources to delete, please wait...")
 	list, err := o.clientset.DeleteClient.ListClusterResourcesToDelete(ctx, o.name, o.namespace)
 	if err != nil {
 		return err
 	}
 	if len(list) == 0 {
-		log.Infof("No resource found for component %q in namespace %q\n", o.name, o.namespace)
+		log.CtxInfof(ctx, "No resource found for component %q in namespace %q\n", o.name, o.namespace)
 		return nil
 	}
-	printDevfileComponents(o.name, o.namespace, list)
+	printDevfileComponents(ctx, o.name, o.namespace, list)
 	if o.forceFlag || ui.Proceed("Are you sure you want to delete these resources?") {
 		failed := o.clientset.DeleteClient.DeleteResources(list, o.waitFlag)
 		for _, fail := range failed {
-			log.Warningf("Failed to delete the %q resource: %s\n", fail.GetKind(), fail.GetName())
+			log.CtxWarningf(ctx, "Failed to delete the %q resource: %s\n", fail.GetKind(), fail.GetName())
 		}
-		log.Infof("The component %q is successfully deleted from namespace %q", o.name, o.namespace)
+		log.CtxInfof(ctx, "The component %q is successfully deleted from namespace %q", o.name, o.namespace)
 		return nil
 	}
 
-	log.Error("Aborting deletion of component")
+	log.CtxError(ctx, "Aborting deletion of component")
 	return nil
 }
 
@@ -137,7 +137,7 @@ func (o *ComponentOptions) deleteDevfileComponent(ctx context.Context) error {
 		appName       = odocontext.GetApplication(ctx)
 	)
 
-	log.Info("Searching resources to delete, please wait...")
+	log.CtxInfo(ctx, "Searching resources to delete, please wait...")
 	isInnerLoopDeployed, devfileResources, err := o.clientset.DeleteClient.ListResourcesToDeleteFromDevfile(*devfileObj, appName, componentName, labels.ComponentAnyMode)
 	if err != nil {
 		return err
@@ -145,9 +145,9 @@ func (o *ComponentOptions) deleteDevfileComponent(ctx context.Context) error {
 	hasClusterResources := len(devfileResources) != 0
 	if hasClusterResources {
 		// Print all the resources that odo will attempt to delete
-		printDevfileComponents(componentName, namespace, devfileResources)
+		printDevfileComponents(ctx, componentName, namespace, devfileResources)
 	} else {
-		log.Infof("No resource found for component %q in namespace %q\n", componentName, namespace)
+		log.CtxInfof(ctx, "No resource found for component %q in namespace %q\n", componentName, namespace)
 		if !o.withFilesFlag {
 			return nil
 		}
@@ -159,7 +159,7 @@ func (o *ComponentOptions) deleteDevfileComponent(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		printFileCreatedByOdo(filesToDelete, hasClusterResources)
+		printFileCreatedByOdo(ctx, filesToDelete, hasClusterResources)
 	}
 	hasFilesToDelete := len(filesToDelete) != 0
 
@@ -179,23 +179,23 @@ func (o *ComponentOptions) deleteDevfileComponent(ctx context.Context) error {
 			if isInnerLoopDeployed {
 				err = o.clientset.DeleteClient.ExecutePreStopEvents(*devfileObj, appName, componentName)
 				if err != nil {
-					log.Errorf("Failed to execute preStop events: %v", err)
+					log.CtxErrorf(ctx, "Failed to execute preStop events: %v", err)
 				}
 			}
 
 			// delete all the resources
 			failed := o.clientset.DeleteClient.DeleteResources(devfileResources, o.waitFlag)
 			for _, fail := range failed {
-				log.Warningf("Failed to delete the %q resource: %s\n", fail.GetKind(), fail.GetName())
+				log.CtxWarningf(ctx, "Failed to delete the %q resource: %s\n", fail.GetKind(), fail.GetName())
 			}
-			log.Infof("The component %q is successfully deleted from namespace %q\n", componentName, namespace)
+			log.CtxInfof(ctx, "The component %q is successfully deleted from namespace %q\n", componentName, namespace)
 
 			if len(remainingResources) != 0 {
-				log.Printf("There are still resources left in the cluster that might be belonging to the deleted component.")
+				log.CtxPrintf(ctx, "There are still resources left in the cluster that might be belonging to the deleted component.")
 				for _, resource := range remainingResources {
-					fmt.Printf("\t- %s: %s\n", resource.GetKind(), resource.GetName())
+					log.CtxPrintf(ctx, "\t- %s: %s\n", resource.GetKind(), resource.GetName())
 				}
-				log.Infof("If you want to delete those, execute `odo delete component --name %s --namespace %s`\n", componentName, namespace)
+				log.CtxInfof(ctx, "If you want to delete those, execute `odo delete component --name %s --namespace %s`\n", componentName, namespace)
 			}
 		}
 
@@ -204,20 +204,20 @@ func (o *ComponentOptions) deleteDevfileComponent(ctx context.Context) error {
 			remainingFiles := o.deleteFilesCreatedByOdo(o.clientset.FS, filesToDelete)
 			var listOfFiles []string
 			for f, e := range remainingFiles {
-				log.Warningf("Failed to delete file or directory: %s: %v\n", f, e)
+				log.CtxWarningf(ctx, "Failed to delete file or directory: %s: %v\n", f, e)
 				listOfFiles = append(listOfFiles, "\t- "+f)
 			}
 			if len(remainingFiles) != 0 {
-				log.Printf("There are still files or directories that could not be deleted.")
-				fmt.Println(strings.Join(listOfFiles, "\n"))
-				log.Info("You need to manually delete those.")
+				log.CtxPrintf(ctx, "There are still files or directories that could not be deleted.")
+				log.CtxPrintf(ctx, strings.Join(listOfFiles, "\n")+"\n")
+				log.CtxInfo(ctx, "You need to manually delete those.")
 			}
 		}
 
 		return nil
 	}
 
-	log.Error("Aborting deletion of component")
+	log.CtxError(ctx, "Aborting deletion of component")
 
 	return nil
 }
@@ -243,16 +243,16 @@ func listResourcesMissingFromDevfilePresentOnCluster(componentName string, devfi
 }
 
 // printDevfileResources prints the devfile components for ComponentOptions.deleteDevfileComponent
-func printDevfileComponents(componentName, namespace string, k8sResources []unstructured.Unstructured) {
-	log.Infof("This will delete %q from the namespace %q.", componentName, namespace)
+func printDevfileComponents(ctx context.Context, componentName, namespace string, k8sResources []unstructured.Unstructured) {
+	log.CtxInfof(ctx, "This will delete %q from the namespace %q.", componentName, namespace)
 
 	if len(k8sResources) != 0 {
-		log.Printf("The component contains the following resources that will get deleted:")
+		log.CtxPrintf(ctx, "The component contains the following resources that will get deleted:")
 		for _, resource := range k8sResources {
-			fmt.Printf("\t- %s: %s\n", resource.GetKind(), resource.GetName())
+			log.CtxPrintf(ctx, "\t- %s: %s\n", resource.GetKind(), resource.GetName())
 		}
 	}
-	fmt.Println()
+	log.CtxPrintln(ctx)
 }
 
 // getFilesCreatedByOdo gets the list of all files that were initially created by odo.
@@ -278,7 +278,7 @@ func getFilesCreatedByOdo(filesys filesystem.Filesystem, ctx context.Context) ([
 	return list, nil
 }
 
-func printFileCreatedByOdo(files []string, hasClusterResources bool) {
+func printFileCreatedByOdo(ctx context.Context, files []string, hasClusterResources bool) {
 	if len(files) == 0 {
 		return
 	}
@@ -287,9 +287,9 @@ func printFileCreatedByOdo(files []string, hasClusterResources bool) {
 	if hasClusterResources {
 		m += "also "
 	}
-	log.Info(m + "delete the following files and directories:")
+	log.CtxInfo(ctx, m+"delete the following files and directories:")
 	for _, f := range files {
-		fmt.Println("\t- " + f)
+		log.CtxPrintf(ctx, "\t- "+f+"\n")
 	}
 }
 
