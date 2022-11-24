@@ -180,7 +180,7 @@ func GenericRun(o Runnable, cmd *cobra.Command, args []string) {
 
 	cmdLineObj := cmdline.NewCobra(cmd)
 	platform := commonflags.GetRunOnValue(cmdLineObj)
-	deps, err := clientset.Fetch(cmd, platform)
+	deps, err := clientset.Fetch(cmd, platform, clientset.Clientset{})
 	if err != nil {
 		util.LogErrorAndExit(err, "")
 	}

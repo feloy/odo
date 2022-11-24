@@ -144,23 +144,30 @@ func isDefined(command *cobra.Command, dependency string) bool {
 	return ok
 }
 
-func Fetch(command *cobra.Command, platform string) (*Clientset, error) {
+func Fetch(command *cobra.Command, platform string, mocks Clientset) (*Clientset, error) {
 	dep := Clientset{}
 	var err error
 
 	/* Without sub-dependencies */
 	if isDefined(command, FILESYSTEM) {
-		dep.FS = filesystem.DefaultFs{}
+		if mocks.FS != nil {
+			dep.FS = mocks.FS
+		} else {
+			dep.FS = filesystem.DefaultFs{}
+		}
 	}
 	if isDefined(command, KUBERNETES) || isDefined(command, KUBERNETES_NULLABLE) {
-		dep.KubernetesClient, err = kclient.New()
-		if err != nil {
-			if isDefined(command, KUBERNETES) {
-				return nil, err
+		if mocks.KubernetesClient != nil {
+			dep.KubernetesClient = mocks.KubernetesClient
+		} else {
+			dep.KubernetesClient, err = kclient.New()
+			if err != nil {
+				if isDefined(command, KUBERNETES) {
+					return nil, err
+				}
+				dep.KubernetesClient = nil
 			}
-			dep.KubernetesClient = nil
 		}
-
 	}
 	if isDefined(command, PODMAN) {
 		dep.PodmanClient = podman.NewPodmanCli()
