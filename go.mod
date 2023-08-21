@@ -21,7 +21,7 @@ require (
 	github.com/go-git/go-git/v5 v5.7.0
 	github.com/go-openapi/jsonpointer v0.20.0
 	github.com/go-openapi/jsonreference v0.20.2
-	github.com/go-openapi/spec v0.20.8
+	github.com/go-openapi/spec v0.20.9
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/mux v1.8.0
