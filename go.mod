@@ -40,6 +40,7 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/posener/complete v1.2.3
 	github.com/redhat-developer/service-binding-operator v1.0.1-0.20211222115357-5b7bbba3bfb3
+	github.com/rs/cors v1.10.1
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
 	github.com/securego/gosec/v2 v2.17.0
 	github.com/segmentio/backo-go v1.0.1

@@ -21,6 +21,8 @@ import (
 	"github.com/redhat-developer/odo/pkg/state"
 	"github.com/redhat-developer/odo/pkg/testingutil/filesystem"
 	"github.com/redhat-developer/odo/pkg/util"
+
+	"github.com/rs/cors"
 )
 
 //go:embed ui/*
@@ -110,11 +112,17 @@ func StartServer(
 		return ApiServer{}, fmt.Errorf("unable to start API Server listener on port %d: %w", port, err)
 	}
 
+	c := cors.New(cors.Options{
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "PATCH"},
+		AllowedOrigins: []string{"http://localhost:3000"},
+	})
+	handler := c.Handler(router)
+
 	server := &http.Server{
 		BaseContext: func(net.Listener) context.Context {
 			return ctx
 		},
-		Handler: router,
+		Handler: handler,
 	}
 	var errChan = make(chan error)
 	go func() {
